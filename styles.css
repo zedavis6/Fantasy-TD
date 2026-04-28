@@ -1,0 +1,371 @@
+:root {
+  color-scheme: dark;
+  --bg: #101216;
+  --panel: #201d19;
+  --panel-2: #2b281f;
+  --line: #4b4335;
+  --text: #fff6df;
+  --muted: #c9bfa8;
+  --gold: #f4c95d;
+  --cyan: #91ddec;
+  --rose: #ff6f8e;
+  --green: #73c66b;
+  --danger: #ff5b5b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% 16%, rgba(240, 193, 75, 0.13), transparent 26%),
+    linear-gradient(135deg, #151712 0%, #241c1b 48%, #121914 100%);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--cyan);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+.game-panel,
+.controls {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(42, 35, 25, 0.94), rgba(24, 22, 17, 0.96)),
+    rgba(25, 29, 35, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.game-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.35rem, 2.2vw, 2.2rem);
+  line-height: 1;
+}
+
+.topbar p,
+.tool-group p,
+small {
+  color: var(--muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(80px, auto));
+  gap: 8px;
+}
+
+.stats span {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #181611;
+  color: var(--muted);
+  text-align: center;
+}
+
+.stats b {
+  display: block;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.board-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 14px;
+}
+
+canvas {
+  width: min(100%, calc((100vh - 128px) * 1.579));
+  max-height: calc(100vh - 128px);
+  aspect-ratio: 960 / 608;
+  border: 1px solid #6b5737;
+  border-radius: 8px;
+  background: #172215;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 246, 223, 0.06),
+    inset 0 0 42px rgba(0, 0, 0, 0.42);
+}
+
+.banner {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  max-width: min(520px, calc(100% - 56px));
+  transform: translateX(-50%);
+  padding: 9px 14px;
+  border: 1px solid rgba(244, 201, 93, 0.45);
+  border-radius: 8px;
+  background: rgba(16, 18, 22, 0.78);
+  color: var(--gold);
+  text-align: center;
+  pointer-events: none;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
+
+.tool-group {
+  display: grid;
+  gap: 10px;
+}
+
+h2 {
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tower-card {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 11px;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 223, 0.035), transparent),
+    var(--panel-2);
+  text-align: left;
+}
+
+.tower-card.active {
+  border-color: var(--gold);
+  background:
+    linear-gradient(180deg, rgba(244, 201, 93, 0.18), rgba(39, 29, 11, 0.88)),
+    #33270f;
+}
+
+.tower-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.tower-swatch.dart {
+  background: var(--gold);
+}
+
+.tower-swatch.rail {
+  background: #c9c3ae;
+}
+
+.tower-swatch.guard {
+  background: #7da1d3;
+}
+
+.tower-swatch.sky {
+  background: #b8f5ff;
+}
+
+.tower-swatch.chain {
+  background: var(--rose);
+}
+
+.tower-swatch.flak {
+  background: #ff8b3d;
+}
+
+.tower-swatch.mortar {
+  background: #8f6f42;
+}
+
+.tower-swatch.frost {
+  background: var(--cyan);
+}
+
+.tower-card b,
+.tower-card small {
+  display: block;
+}
+
+.selected {
+  min-height: 144px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #191611;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.evolution-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.evolution-panel[hidden],
+.evolution-button[hidden] {
+  display: none;
+}
+
+.evolution-button {
+  min-height: 44px;
+  padding: 8px;
+  text-align: left;
+  color: var(--gold);
+}
+
+.actions button,
+.evolution-button,
+#start-wave,
+#pause,
+#restart,
+.speed-button {
+  min-height: 42px;
+}
+
+.primary {
+  border-color: rgba(109, 230, 164, 0.6);
+  background: #173023;
+  color: #d9ffeb;
+}
+
+.range-control {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.range-control span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.range-control b {
+  color: var(--gold);
+}
+
+.range-control input {
+  width: 100%;
+  accent-color: var(--gold);
+}
+
+.speed-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.speed-button.active {
+  border-color: var(--gold);
+  background: #33270f;
+  color: var(--gold);
+}
+
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  canvas {
+    max-height: 65vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    padding: 10px;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stats,
+  .controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .selected {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 500px) {
+  .stats,
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .board-wrap {
+    padding: 8px;
+  }
+}

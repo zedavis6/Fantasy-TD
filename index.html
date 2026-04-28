@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crownfall Defense</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="game-panel" aria-label="Crownfall Defense game board">
+        <div class="topbar">
+          <div>
+            <h1>Crownfall Defense</h1>
+            <p>Build the maze, hold the gates, and break the horde before it reaches the keep.</p>
+          </div>
+          <div class="stats" aria-live="polite">
+            <span><b id="lives">20</b> Keep</span>
+            <span><b id="credits">190</b> Gold</span>
+            <span><b id="wave">1</b> Wave</span>
+            <span><b id="score">0</b> Score</span>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <canvas id="game" width="960" height="608" aria-label="Tower defense playfield"></canvas>
+          <div class="banner" id="banner">Place defenders, then start the wave.</div>
+        </div>
+      </section>
+
+      <aside class="controls" aria-label="Game controls">
+        <div class="tool-group">
+          <h2>Defenders</h2>
+          <button class="tower-card active" data-tower="dart">
+            <span class="tower-swatch dart"></span>
+            <span>
+              <b>Archer</b>
+              <small>1 - Fast single, 35g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="guard">
+            <span class="tower-swatch guard"></span>
+            <span>
+              <b>Shield Guard</b>
+              <small>2 - Melee wall, 30g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="rail">
+            <span class="tower-swatch rail"></span>
+            <span>
+              <b>Ballista</b>
+              <small>3 - Slow single, 65g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="sky">
+            <span class="tower-swatch sky"></span>
+            <span>
+              <b>Sky Hunter</b>
+              <small>4 - Anti-air, 80g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="chain">
+            <span class="tower-swatch chain"></span>
+            <span>
+              <b>Storm Mage</b>
+              <small>5 - Moderate chain, 75g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="flak">
+            <span class="tower-swatch flak"></span>
+            <span>
+              <b>Flame Mage</b>
+              <small>6 - Fast AOE, 60g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="mortar">
+            <span class="tower-swatch mortar"></span>
+            <span>
+              <b>Catapult</b>
+              <small>7 - Slow AOE, 95g</small>
+            </span>
+          </button>
+          <button class="tower-card" data-tower="frost">
+            <span class="tower-swatch frost"></span>
+            <span>
+              <b>Frost Wizard</b>
+              <small>8 - AOE slow, 70g</small>
+            </span>
+          </button>
+        </div>
+
+        <div class="tool-group selected">
+          <h2 id="selection-title">No defender selected</h2>
+          <p id="selection-copy">Click a defender on the field to upgrade or sell it.</p>
+          <div class="actions">
+            <button id="upgrade" disabled>Upgrade U</button>
+            <button id="sell" disabled>Sell S</button>
+          </div>
+          <div class="evolution-panel" id="evolution-panel" hidden>
+            <button class="evolution-button" data-evolution="a"></button>
+            <button class="evolution-button" data-evolution="b"></button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <h2>Wave Control</h2>
+          <button id="start-wave" class="primary">Start Wave W</button>
+          <button id="pause">Pause Space</button>
+          <button id="restart">Restart</button>
+        </div>
+
+        <div class="tool-group">
+          <h2>Run Tuning</h2>
+          <label class="range-control" for="difficulty">
+            <span>Difficulty <b id="difficulty-value">3</b></span>
+            <input id="difficulty" type="range" min="1" max="5" step="1" value="3" />
+          </label>
+          <div class="speed-control" aria-label="Game speed">
+            <button class="speed-button active" data-speed="1">1x</button>
+            <button class="speed-button" data-speed="2">2x</button>
+            <button class="speed-button" data-speed="3">3x</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
