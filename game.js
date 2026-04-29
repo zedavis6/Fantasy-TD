@@ -7,6 +7,12 @@ const ui = {
   wave: document.getElementById("wave"),
   score: document.getElementById("score"),
   banner: document.getElementById("banner"),
+  previewName: document.getElementById("preview-name"),
+  previewDetails: document.getElementById("preview-details"),
+  previewTags: document.getElementById("preview-tags"),
+  towerDock: document.getElementById("tower-dock"),
+  raceCopy: document.getElementById("race-copy"),
+  raceButtons: [...document.querySelectorAll(".race-button")],
   start: document.getElementById("start-wave"),
   pause: document.getElementById("pause"),
   restart: document.getElementById("restart"),
@@ -16,9 +22,10 @@ const ui = {
   evolutionButtons: [...document.querySelectorAll(".evolution-button")],
   difficulty: document.getElementById("difficulty"),
   difficultyValue: document.getElementById("difficulty-value"),
+  difficultyLock: document.getElementById("difficulty-lock"),
   selectionTitle: document.getElementById("selection-title"),
   selectionCopy: document.getElementById("selection-copy"),
-  towerCards: [...document.querySelectorAll(".tower-card")],
+  towerCards: [],
   speedButtons: [...document.querySelectorAll(".speed-button")],
 };
 
@@ -30,7 +37,7 @@ const rows = H / cell;
 const spawnTile = { col: 0, row: 9 };
 const keepTile = { col: cols - 1, row: 9 };
 
-const towerTypes = {
+const humanTowerTypes = {
   dart: {
     name: "Archer",
     role: "Fast single low damage",
@@ -44,13 +51,13 @@ const towerTypes = {
   },
   guard: {
     name: "Shield Guard",
-    role: "Melee wall",
+    role: "Cheap melee",
     glyph: "G",
-    cost: 30,
+    cost: 20,
     color: "#7da1d3",
     range: 48,
     fireRate: 0.55,
-    damage: 11,
+    damage: 4,
     projectileSpeed: 0,
     melee: true,
   },
@@ -117,7 +124,7 @@ const towerTypes = {
   },
   frost: {
     name: "Frost Wizard",
-    role: "AOE slow",
+    role: "Single-target slow",
     glyph: "W",
     cost: 70,
     color: "#5bd7e8",
@@ -125,13 +132,12 @@ const towerTypes = {
     fireRate: 0.82,
     damage: 4,
     projectileSpeed: 360,
-    splashRadius: 58,
     slow: true,
     slowDuration: 1.8,
   },
 };
 
-const evolutions = {
+const humanEvolutions = {
   dart: {
     a: {
       name: "Rapid Volley",
@@ -152,20 +158,21 @@ const evolutions = {
   },
   guard: {
     a: {
-      name: "Bulwark",
-      desc: "Wider reach and more damage",
-      rangeAdd: 20,
-      damageMult: 1.45,
+      name: "Shield Bash",
+      desc: "Briefly stuns enemies",
+      stunDuration: 0.32,
+      damageMult: 1.2,
       glyph: "T",
-      final: { name: "Iron Bastion", desc: "Huge melee zone", rangeAdd: 34, damageMult: 1.35, glyph: "I" },
+      final: { name: "Iron Bastion", desc: "Longer stun and wider reach", stunDurationAdd: 0.22, rangeAdd: 28, glyph: "I" },
     },
     b: {
-      name: "Blademaster",
-      desc: "Fast melee strikes",
-      fireRateMult: 0.48,
-      damageMult: 1.15,
+      name: "Shield Sweep",
+      desc: "Sweeps several nearby enemies",
+      multiShot: 3,
+      damageMult: 1.05,
+      fireRateMult: 0.82,
       glyph: "D",
-      final: { name: "Duelist Captain", desc: "Very fast cleaving strikes", fireRateMult: 0.62, multiShot: 3, glyph: "K" },
+      final: { name: "Duelist Captain", desc: "Fast sweeping strikes", fireRateMult: 0.58, multiShot: 4, damageMult: 1.25, glyph: "K" },
     },
   },
   rail: {
@@ -267,24 +274,202 @@ const evolutions = {
   },
   frost: {
     a: {
-      name: "Deep Freeze",
-      desc: "Stronger, longer slow",
-      slowDurationAdd: 1.25,
-      splashRadiusAdd: 18,
+      name: "Deep Chill",
+      desc: "Much longer single-target slow",
+      slowDurationAdd: 1.8,
+      rangeAdd: 18,
       glyph: "D",
-      final: { name: "Winter Prison", desc: "Enormous slow field", slowDurationAdd: 1.6, splashRadiusAdd: 38, glyph: "P" },
+      final: { name: "Winter Prison", desc: "Extreme long-duration slow", slowDurationAdd: 2.2, rangeAdd: 28, glyph: "P" },
     },
     b: {
       name: "Ice Shards",
-      desc: "Slow plus real damage",
-      damageMult: 2.7,
-      fireRateMult: 0.82,
+      desc: "AOE slowing splash",
+      splashRadiusAdd: 54,
+      damageMult: 1.45,
+      fireRateMult: 1.08,
       glyph: "I",
-      final: { name: "Glacier Lance", desc: "Heavy freezing damage", damageMult: 1.8, fireRateMult: 0.76, glyph: "G" },
+      final: { name: "Glacier Bloom", desc: "Large AOE slow bursts", splashRadiusAdd: 38, damageMult: 1.35, glyph: "G" },
     },
   },
 };
 
+const orcTowerTypes = {
+  grunt: {
+    name: "Grunt",
+    role: "Very cheap melee",
+    glyph: "G",
+    cost: 12,
+    color: "#9ac15e",
+    range: 42,
+    rangeGrowth: 3,
+    fireRate: 0.64,
+    damage: 2,
+    projectileSpeed: 0,
+    melee: true,
+    groundOnly: true,
+  },
+  spear: {
+    name: "Spear Thrower",
+    role: "High damage line",
+    glyph: "S",
+    cost: 34,
+    color: "#c8a45d",
+    range: 154,
+    rangeGrowth: 3,
+    fireRate: 0.48,
+    damage: 10,
+    projectileSpeed: 0,
+    lineStrike: true,
+    lineWidth: 22,
+  },
+  berserker: {
+    name: "Berserker",
+    role: "High melee damage",
+    glyph: "B",
+    cost: 52,
+    color: "#d3664a",
+    range: 54,
+    rangeGrowth: 3,
+    fireRate: 0.34,
+    damage: 20,
+    projectileSpeed: 0,
+    melee: true,
+    groundOnly: true,
+  },
+  wyvern: {
+    name: "Wyvern Spear",
+    role: "Anti-air snare",
+    glyph: "W",
+    cost: 78,
+    color: "#b8f5ff",
+    range: 92,
+    rangeGrowth: 4,
+    fireRate: 0.82,
+    damage: 92,
+    projectileSpeed: 700,
+    antiAirOnly: true,
+    slow: true,
+    slowDuration: 1.1,
+  },
+  drummer: {
+    name: "War Drummer",
+    role: "Damage aura",
+    glyph: "D",
+    cost: 72,
+    color: "#d9a441",
+    range: 92,
+    rangeGrowth: 5,
+    fireRate: 0.52,
+    damage: 11,
+    projectileSpeed: 0,
+    auraDamage: true,
+    groundOnly: true,
+  },
+  firepot: {
+    name: "Firepot",
+    role: "Short AOE burn",
+    glyph: "F",
+    cost: 62,
+    color: "#ff8b3d",
+    range: 94,
+    rangeGrowth: 5,
+    fireRate: 0.55,
+    damage: 3,
+    projectileSpeed: 390,
+    splashRadius: 46,
+    burnDps: 12,
+    burnDuration: 2.4,
+  },
+  crusher: {
+    name: "Crusher",
+    role: "Long splash stun",
+    glyph: "C",
+    cost: 92,
+    color: "#8f6f42",
+    range: 148,
+    rangeGrowth: 3,
+    fireRate: 1.35,
+    damage: 34,
+    projectileSpeed: 300,
+    splashRadius: 58,
+    stun: true,
+    stunDuration: 0.12,
+    groundOnly: true,
+  },
+  hexer: {
+    name: "Hex Witch",
+    role: "Hex aura slow",
+    glyph: "H",
+    cost: 76,
+    color: "#a978e8",
+    range: 98,
+    rangeGrowth: 4,
+    fireRate: 0.82,
+    damage: 0,
+    projectileSpeed: 0,
+    auraSlow: true,
+    slow: true,
+    slowDuration: 0.95,
+    groundOnly: true,
+  },
+};
+
+const orcEvolutions = {
+  grunt: {
+    a: { name: "Frenzy Stab", desc: "Explodes into rapid single-target damage", fireRateMult: 0.36, damageMult: 4.2, glyph: "F", final: { name: "Blood Stabber", desc: "Extreme rapid single damage", fireRateMult: 0.58, damageMult: 1.45, glyph: "B" } },
+    b: { name: "Axe Cleave", desc: "Becomes a real cleaving damage unit", multiShot: 3, damageMult: 3.1, fireRateMult: 0.92, glyph: "A", final: { name: "Axe Mob", desc: "Wide cleaving melee", multiShot: 5, damageMult: 1.25, glyph: "M" } },
+  },
+  spear: {
+    a: { name: "Quick Spears", desc: "Very fast line strikes", fireRateMult: 0.56, damageMult: 0.78, glyph: "Q", final: { name: "Spear Storm", desc: "Extreme line speed", fireRateMult: 0.58, damageMult: 1.08, glyph: "T" } },
+    b: { name: "Barbed Spears", desc: "Harder piercing lines", damageMult: 1.35, fireRateMult: 1.1, lineWidthAdd: 8, glyph: "B", final: { name: "Impaler", desc: "Huge piercing line hits", damageMult: 1.35, lineWidthAdd: 10, glyph: "I" } },
+  },
+  berserker: {
+    a: { name: "Blood Frenzy", desc: "Rapid strikes across nearby enemies", fireRateMult: 0.5, damageMult: 1.08, multiShot: 2, glyph: "F", final: { name: "Red Rage", desc: "Relentless multi-target melee", fireRateMult: 0.58, multiShot: 4, glyph: "R" } },
+    b: { name: "Skull Cleaver", desc: "Heavy cleaving hits", damageMult: 1.55, fireRateMult: 1.18, multiShot: 2, glyph: "K", final: { name: "Boss Butcher", desc: "Huge cleaving burst", damageMult: 1.45, multiShot: 3, glyph: "U" } },
+  },
+  wyvern: {
+    a: { name: "Dragon Skewer", desc: "Extreme anti-air damage", damageMult: 1.8, glyph: "S", final: { name: "Sky Killer", desc: "Flying boss execution", damageMult: 1.9, glyph: "K" } },
+    b: { name: "Net Spears", desc: "AOE anti-air blasts", splashRadiusAdd: 58, damageMult: 0.78, glyph: "N", final: { name: "Net Storm", desc: "Huge anti-air splash", splashRadiusAdd: 58, damageMult: 1.35, glyph: "M" } },
+  },
+  drummer: {
+    a: { name: "Battle Rhythm", desc: "Faster aura pulses", fireRateMult: 0.55, damageMult: 1.1, glyph: "R", final: { name: "War Chant", desc: "Rapid area pressure", fireRateMult: 0.55, damageMult: 1.2, glyph: "C" } },
+    b: { name: "Thunder Drum", desc: "Wider, harder aura", rangeAdd: 28, damageMult: 1.35, glyph: "T", final: { name: "Earth Drum", desc: "Huge damage aura", rangeAdd: 32, damageMult: 1.25, glyph: "E" } },
+  },
+  firepot: {
+    a: { name: "Oil Fire", desc: "Wider, longer burns", splashRadiusAdd: 30, burnDurationAdd: 1.2, glyph: "O", final: { name: "Burn Pit", desc: "Huge lingering burn", splashRadiusAdd: 46, burnDurationAdd: 1.4, fireRateMult: 0.84, glyph: "P" } },
+    b: { name: "Pitch Toss", desc: "Longer range, hotter burns", rangeAdd: 52, fireRateMult: 1.12, burnDpsMult: 1.35, glyph: "T", final: { name: "Meteor Pot", desc: "Long-range burning bombs", rangeAdd: 54, splashRadiusAdd: 30, burnDpsMult: 1.25, glyph: "M" } },
+  },
+  crusher: {
+    a: { name: "War Maul", desc: "Bigger splash and damage", damageMult: 1.35, splashRadiusAdd: 28, glyph: "M", final: { name: "Mountain Breaker", desc: "Massive splash damage", damageMult: 1.3, splashRadiusAdd: 34, glyph: "B" } },
+    b: { name: "Stone Volley", desc: "Faster smaller stun shots", fireRateMult: 0.68, damageMult: 0.78, splashRadiusAdd: -16, glyph: "V", final: { name: "Quake Battery", desc: "Relentless ranged stuns", fireRateMult: 0.68, damageMult: 1.12, glyph: "Q" } },
+  },
+  hexer: {
+    a: { name: "Deep Hex", desc: "Longer slow", slowDurationAdd: 1.35, rangeAdd: 20, glyph: "D", final: { name: "Doom Hex", desc: "Huge slow field", slowDurationAdd: 1.65, rangeAdd: 38, glyph: "X" } },
+    b: { name: "Pain Hex", desc: "Adds damage to the slow field", damageAdd: 12, fireRateMult: 0.85, glyph: "P", final: { name: "Soul Hex", desc: "Heavy magic damage", damageAdd: 18, fireRateMult: 0.76, glyph: "S" } },
+  },
+};
+
+const races = {
+  human: {
+    name: "Human",
+    description: "Balanced defenders with siege, mages, and anti-air.",
+    towers: humanTowerTypes,
+    evolutions: humanEvolutions,
+    order: ["dart", "guard", "rail", "sky", "chain", "flak", "mortar", "frost"],
+  },
+  orc: {
+    name: "Orc",
+    description: "Melee-heavy maze builders with brutal short-range damage.",
+    towers: orcTowerTypes,
+    evolutions: orcEvolutions,
+    order: ["grunt", "spear", "berserker", "wyvern", "drummer", "firepot", "crusher", "hexer"],
+  },
+};
+
+let selectedRace = "human";
+let raceLocked = false;
+let towerTypes = races[selectedRace].towers;
+let evolutions = races[selectedRace].evolutions;
 let selectedBuild = "dart";
 let selectedTower = null;
 let hoveredTile = null;
@@ -296,14 +481,17 @@ let paused = false;
 let ended = false;
 let gameSpeed = 1;
 let animTime = 0;
+let difficultyLocked = false;
+let nextTowerId = 1;
 
 const state = {
   lives: 20,
-  credits: 190,
+  credits: 230,
   wave: 1,
   score: 0,
   spawned: 0,
   toSpawn: 0,
+  waveQueue: [],
   towers: [],
   enemies: [],
   projectiles: [],
@@ -321,6 +509,37 @@ const terrainDecor = Array.from({ length: 90 }, (_, index) => {
 
 function dist(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function distanceToSegment(point, start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSq = dx * dx + dy * dy;
+  if (!lengthSq) return dist(point, start);
+  const t = clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSq, 0, 1);
+  return Math.hypot(point.x - (start.x + dx * t), point.y - (start.y + dy * t));
+}
+
+function lineStrikePlan(tower, stats, targets) {
+  let best = null;
+  for (const candidate of targets) {
+    const dx = candidate.x - tower.x;
+    const dy = candidate.y - tower.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const end = {
+      x: tower.x + (dx / distance) * stats.range,
+      y: tower.y + (dy / distance) * stats.range,
+    };
+    const hits = targets.filter(
+      (enemy) => distanceToSegment(enemy, tower, end) <= (stats.lineWidth || 20) + enemy.radius * 0.65,
+    );
+    const leadProgress = Math.max(...hits.map(enemyProgress));
+    const score = hits.length * 100000 + leadProgress;
+    if (!best || score > best.score) {
+      best = { end, hits, score };
+    }
+  }
+  return best;
 }
 
 function clamp(value, min, max) {
@@ -440,10 +659,22 @@ function enemyProgress(enemy) {
 
 function difficultyStats() {
   const level = state.difficulty;
+  const rewardByDifficulty = {
+    1: 1,
+    2: 1.12,
+    3: 1.45,
+    4: 1.95,
+    5: 2.55,
+  };
   return {
     hp: 1 + (level - 1) * 0.22,
     speed: 1 + (level - 1) * 0.07,
+    reward: rewardByDifficulty[level] || 1,
   };
+}
+
+function scaledGold(amount) {
+  return Math.round(amount * difficultyStats().reward);
 }
 
 function flyingPath() {
@@ -452,15 +683,102 @@ function flyingPath() {
   return [{ x: start.x - 34, y: start.y }, keep];
 }
 
-function makeEnemy(spawnIndex = 0) {
+function repeatType(type, count) {
+  return Array.from({ length: Math.max(0, count) }, () => type);
+}
+
+function shuffled(items, seed) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = (seed * 17 + i * 31) % (i + 1);
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function wavePlan(wave) {
+  if (wave % 25 === 0) {
+    const extra = Math.floor(wave / 25) * 2;
+    return {
+      name: "Flying Boss",
+      details: "An Elder Dragon ignores the maze. Sky Hunters matter.",
+      tags: ["flying boss", "anti-air", "high damage"],
+      queue: ["flyingBoss", ...repeatType("dragon", extra)],
+      spawnGap: Math.max(0.7, 1.15 - wave * 0.014),
+    };
+  }
+
+  if (wave % 10 === 0) {
+    const guards = Math.floor(wave / 10) * 2;
+    return {
+      name: "Ground Boss",
+      details: "A Siege Lord follows the maze with knight support.",
+      tags: ["ground boss", "armor", "single-target"],
+      queue: ["groundBoss", ...repeatType("knight", guards)],
+      spawnGap: Math.max(0.62, 1.05 - wave * 0.014),
+    };
+  }
+
+  if (wave >= 9 && wave % 7 === 0) {
+    const dragons = 2 + Math.floor(wave / 14);
+    return {
+      name: "Dragon Skies",
+      details: "Flying dragons cut across the field.",
+      tags: ["flying", "anti-air"],
+      queue: shuffled([...repeatType("dragon", dragons), ...repeatType("skeleton", 5 + wave)], wave),
+      spawnGap: Math.max(0.34, 0.82 - wave * 0.018),
+    };
+  }
+
+  if (wave > 5 && wave % 5 === 0) {
+    return {
+      name: "Knight Push",
+      details: "Fallen knights test focused damage and long lanes.",
+      tags: ["armor", "tanky"],
+      queue: shuffled([...repeatType("knight", 4 + Math.floor(wave / 3)), ...repeatType("skeleton", 6 + wave)], wave),
+      spawnGap: Math.max(0.38, 0.9 - wave * 0.018),
+    };
+  }
+
+  if (wave > 3 && wave % 4 === 0) {
+    return {
+      name: "Centaur Rush",
+      details: "Fast centaurs punish short or leaky mazes.",
+      tags: ["fast", "rush"],
+      queue: shuffled([...repeatType("centaur", 5 + Math.floor(wave / 2)), ...repeatType("skeleton", 5 + wave)], wave),
+      spawnGap: Math.max(0.26, 0.7 - wave * 0.014),
+    };
+  }
+
+  return {
+    name: wave < 3 ? "Skeleton Probe" : "Skeleton Swarm",
+    details: wave < 3 ? "Skeletons test your first maze." : "A broad skeleton wave rewards clean path length.",
+    tags: ["baseline", "maze value"],
+    queue: repeatType("skeleton", 9 + wave * 3),
+    spawnGap: Math.max(0.28, 0.86 - wave * 0.026),
+  };
+}
+
+function updateWavePreview() {
+  const plan = wavePlan(state.wave);
+  ui.previewName.textContent = `${state.wave}: ${plan.name}`;
+  ui.previewDetails.textContent = plan.details;
+  ui.previewTags.innerHTML = "";
+  for (const tag of [...plan.tags, `${plan.queue.length} enemies`]) {
+    const item = document.createElement("span");
+    item.textContent = tag;
+    ui.previewTags.appendChild(item);
+  }
+}
+
+function makeEnemy(type = "skeleton") {
   const wave = state.wave;
-  const typeRoll = Math.random();
-  const flyingBoss = wave % 25 === 0 && spawnIndex === 0;
-  const groundBoss = !flyingBoss && wave % 10 === 0 && spawnIndex === 0;
+  const flyingBoss = type === "flyingBoss";
+  const groundBoss = type === "groundBoss";
   const boss = flyingBoss || groundBoss;
-  const dragon = flyingBoss || (!groundBoss && wave >= 9 && typeRoll < 0.12);
-  const runner = !dragon && wave > 3 && typeRoll > 0.72;
-  const bruiser = !dragon && wave > 5 && typeRoll < 0.2;
+  const dragon = flyingBoss || type === "dragon";
+  const runner = type === "centaur";
+  const bruiser = type === "knight";
   const difficulty = difficultyStats();
   const waveScale = 1 + Math.max(0, wave - 1) * 0.055;
   const baseHp = flyingBoss
@@ -482,7 +800,7 @@ function makeEnemy(spawnIndex = 0) {
     hp,
     maxHp: hp,
     speed: (flyingBoss ? 33 + wave * 0.8 : groundBoss ? 36 + wave * 0.9 : dragon ? 42 + wave * 1.1 : runner ? 96 + wave * 2.2 : bruiser ? 43 + wave * 1.2 : 63 + wave * 1.7) * difficulty.speed,
-    reward: flyingBoss ? 170 + wave * 4 : groundBoss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 16 : runner ? 10 : 8,
+    reward: scaledGold(flyingBoss ? 170 + wave * 4 : groundBoss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 16 : runner ? 10 : 8),
     radius: flyingBoss ? 25 : groundBoss ? 23 : dragon ? 18 : bruiser ? 14 : runner ? 9 : 11,
     color: flyingBoss ? "#8f2520" : groundBoss ? "#7b6552" : dragon ? "#d13f2f" : bruiser ? "#b9b2a2" : runner ? "#73c66b" : "#d9d1bd",
     name: flyingBoss ? "Elder Dragon" : groundBoss ? "Siege Lord" : dragon ? "Dragon" : bruiser ? "Fallen Knight" : runner ? "Centaur" : "Skeleton",
@@ -491,6 +809,10 @@ function makeEnemy(spawnIndex = 0) {
     boss,
     livesDamage: flyingBoss ? 6 : groundBoss ? 4 : dragon ? 2 : 1,
     slowTime: 0,
+    slowSources: {},
+    burnTime: 0,
+    burnDps: 0,
+    stunTime: 0,
   };
 }
 
@@ -500,31 +822,37 @@ function startWave() {
     ui.banner.textContent = "Open a path from gate to keep.";
     return;
   }
+  if (!difficultyLocked) {
+    difficultyLocked = true;
+    state.difficulty = Number(ui.difficulty.value);
+    ui.difficulty.disabled = true;
+    ui.difficultyLock.textContent = `Locked for this run at ${state.difficulty}.`;
+  }
+  if (!raceLocked) {
+    raceLocked = true;
+    ui.raceButtons.forEach((button) => {
+      button.disabled = true;
+    });
+    ui.raceCopy.textContent = `${races[selectedRace].name} locked for this run.`;
+  }
   waveActive = true;
+  const plan = wavePlan(state.wave);
   state.spawned = 0;
-  state.toSpawn =
-    state.wave % 25 === 0
-      ? 1 + Math.floor(state.wave / 25) * 3
-      : state.wave % 10 === 0
-        ? 1 + Math.floor(state.wave / 10) * 3
-        : 9 + state.wave * 3;
+  state.waveQueue = [...plan.queue];
+  state.toSpawn = state.waveQueue.length;
   spawnTimer = 0;
-  ui.banner.textContent =
-    state.wave % 25 === 0
-      ? `Flying boss wave ${state.wave}`
-      : state.wave % 10 === 0
-        ? `Ground boss wave ${state.wave}`
-        : `Wave ${state.wave} enters the maze`;
+  ui.banner.textContent = `${plan.name} enters the maze`;
   ui.start.disabled = true;
 }
 
 function resetGame() {
   state.lives = 20;
-  state.credits = 190;
+  state.credits = 230;
   state.wave = 1;
   state.score = 0;
   state.spawned = 0;
   state.toSpawn = 0;
+  state.waveQueue = [];
   state.towers = [];
   state.enemies = [];
   state.projectiles = [];
@@ -534,17 +862,28 @@ function resetGame() {
   waveActive = false;
   paused = false;
   ended = false;
+  difficultyLocked = false;
+  raceLocked = false;
+  nextTowerId = 1;
+  ui.difficulty.disabled = false;
+  ui.difficultyLock.textContent = "Locks when the first wave starts.";
+  ui.raceButtons.forEach((button) => {
+    button.disabled = false;
+  });
+  ui.raceCopy.textContent = races[selectedRace].description;
   refreshPath();
   ui.start.disabled = false;
   ui.pause.textContent = "Pause";
   ui.banner.textContent = "Place defenders as walls, but leave a path to the keep.";
   updateHud();
+  updateWavePreview();
 }
 
 function createTower(type, tile) {
   const base = towerTypes[type];
   const center = tileCenter(tile);
   return {
+    id: nextTowerId++,
     type,
     col: tile.col,
     row: tile.row,
@@ -560,13 +899,25 @@ function createTower(type, tile) {
 
 function applyStatModifier(stats, modifier) {
   if (!modifier) return stats;
+  if (modifier.damageAdd !== undefined) stats.damage = Math.max(0, stats.damage + modifier.damageAdd);
   if (modifier.damageMult !== undefined) stats.damage = Math.max(1, Math.round(stats.damage * modifier.damageMult));
+  if (modifier.burnDpsMult !== undefined) stats.burnDps = Math.max(1, Math.round((stats.burnDps || 0) * modifier.burnDpsMult));
+  if (modifier.burnDurationAdd !== undefined) stats.burnDuration = (stats.burnDuration || 0) + modifier.burnDurationAdd;
   if (modifier.fireRateMult !== undefined) stats.fireRate = Math.max(0.14, stats.fireRate * modifier.fireRateMult);
   if (modifier.rangeAdd !== undefined) stats.range = Math.max(32, stats.range + modifier.rangeAdd);
   if (modifier.splashRadiusAdd !== undefined) stats.splashRadius = Math.max(0, (stats.splashRadius || 0) + modifier.splashRadiusAdd);
   if (modifier.chainRangeAdd !== undefined) stats.chainRange = (stats.chainRange || 0) + modifier.chainRangeAdd;
   if (modifier.chainCountAdd !== undefined) stats.chainCount = Math.max(0, (stats.chainCount || 0) + modifier.chainCountAdd);
+  if (modifier.lineWidthAdd !== undefined) stats.lineWidth = Math.max(8, (stats.lineWidth || 0) + modifier.lineWidthAdd);
   if (modifier.multiShot !== undefined) stats.multiShot = modifier.multiShot;
+  if (modifier.stunDuration !== undefined) {
+    stats.stun = true;
+    stats.stunDuration = modifier.stunDuration;
+  }
+  if (modifier.stunDurationAdd !== undefined) {
+    stats.stun = true;
+    stats.stunDuration = (stats.stunDuration || 0) + modifier.stunDurationAdd;
+  }
   if (modifier.slowDurationAdd !== undefined) stats.slowDuration = (stats.slowDuration || 0) + modifier.slowDurationAdd;
   return stats;
 }
@@ -579,10 +930,12 @@ function towerStats(tower) {
   const stats = {
     ...base,
     damage: Math.round(base.damage * levelBoost),
-    range: base.range + (tower.level - 1) * 13,
+    range: base.range + (tower.level - 1) * (base.rangeGrowth ?? 13),
     fireRate: Math.max(0.22, base.fireRate - (tower.level - 1) * 0.06),
     splashRadius: base.splashRadius ? base.splashRadius + (tower.level - 1) * 5 : 0,
     chainCount: base.chainCount ? base.chainCount + Math.floor((tower.level - 1) / 2) : 0,
+    lineWidth: base.lineWidth ? base.lineWidth + Math.floor((tower.level - 1) * 1.5) : 0,
+    burnDps: base.burnDps ? Math.round(base.burnDps * levelBoost) : 0,
   };
   if (!evolution) return stats;
 
@@ -598,11 +951,14 @@ function towerStats(tower) {
 }
 
 function upgradeCost(tower) {
-  return tower.level < 4 ? 38 + tower.level * 30 : 110 + tower.level * 62;
+  const baseCost = tower.level < 4 ? 38 + tower.level * 30 : 110 + tower.level * 62;
+  if (tower.level === 2) return Math.round(baseCost * 1.15);
+  if (tower.level === 3) return Math.round(baseCost * 1.2);
+  return baseCost;
 }
 
 function evolutionCost(tower) {
-  return 150 + towerTypes[tower.type].cost;
+  return Math.round((150 + towerTypes[tower.type].cost) * 1.3);
 }
 
 function finalFormCost(tower) {
@@ -635,8 +991,13 @@ function updateSelection() {
         : `Upgrade ${cost}g`;
   const extras = [];
   const options = evolutions[selectedTower.type];
-  if (stats.melee) extras.push("blocks");
+  if (stats.melee) extras.push("melee");
   if (stats.antiAirOnly) extras.push("flying only");
+  if (stats.auraSlow || stats.auraDamage) extras.push("aura");
+  if (stats.lineStrike) extras.push("line");
+  if (stats.shockwave) extras.push("shockwave");
+  if (stats.stun) extras.push("stuns");
+  if (stats.burnDps) extras.push("burns");
   if (stats.multiShot) extras.push(`${stats.multiShot} shots`);
   if (stats.chain) extras.push(`${stats.chainCount} chains`);
   if (stats.splashRadius) extras.push(`${Math.round(stats.splashRadius)} splash`);
@@ -706,17 +1067,79 @@ function placeOrSelect(tile) {
 function fireTower(tower) {
   const stats = towerStats(tower);
   const targets = state.enemies
-    .filter((enemy) => dist(tower, enemy) <= stats.range && (!stats.antiAirOnly || enemy.flying))
+    .filter(
+      (enemy) =>
+        dist(tower, enemy) <= stats.range &&
+        (!stats.antiAirOnly || enemy.flying) &&
+        (!stats.groundOnly || !enemy.flying),
+    )
     .sort((a, b) => enemyProgress(b) - enemyProgress(a));
 
   const target = targets[0];
   if (!target) return;
 
   tower.cooldown = stats.fireRate;
+  if (stats.auraSlow) {
+    for (const enemy of targets) {
+      applyDamage(enemy, stats.damage);
+      if (state.enemies.includes(enemy)) applySlow(enemy, stats.slowDuration || 1.4, tower.id);
+    }
+    state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.22, color: stats.color });
+    return;
+  }
+
+  if (stats.auraDamage) {
+    for (const enemy of targets) {
+      applyDamage(enemy, stats.damage);
+    }
+    state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.18, color: stats.color });
+    return;
+  }
+
+  if (stats.shockwave) {
+    const radius = stats.splashRadius || stats.range;
+    const shockTargets = state.enemies
+      .filter(
+        (enemy) =>
+          dist(tower, enemy) <= radius &&
+          (!stats.antiAirOnly || enemy.flying) &&
+          (!stats.groundOnly || !enemy.flying),
+      )
+      .sort((a, b) => enemyProgress(b) - enemyProgress(a));
+    for (const enemy of shockTargets) {
+      const distanceMod = 1 - clamp(dist(enemy, tower) / radius, 0, 0.55);
+      applyDamage(enemy, Math.max(1, Math.round(stats.damage * distanceMod)));
+    }
+    state.effects.push({ x: tower.x, y: tower.y, r: radius, life: 0.2, color: stats.color });
+    return;
+  }
+
+  if (stats.lineStrike) {
+    const width = stats.lineWidth || 20;
+    const plan = lineStrikePlan(tower, stats, targets);
+    if (!plan) return;
+    const lineTargets = plan.hits.sort((a, b) => enemyProgress(b) - enemyProgress(a));
+    for (const enemy of lineTargets) {
+      applyDamage(enemy, stats.damage);
+    }
+    state.effects.push({
+      type: "line",
+      x: tower.x,
+      y: tower.y,
+      x2: plan.end.x,
+      y2: plan.end.y,
+      r: width,
+      life: 0.18,
+      color: stats.color,
+    });
+    return;
+  }
+
   if (stats.melee) {
     const meleeTargets = targets.slice(0, stats.multiShot || 1);
     for (const enemy of meleeTargets) {
       applyDamage(enemy, stats.damage);
+      if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.25);
       state.effects.push({ x: enemy.x, y: enemy.y, r: 18, life: 0.16, color: stats.color });
     }
     return;
@@ -740,11 +1163,16 @@ function fireTower(tower) {
       flyingOnlySplash: stats.antiAirOnly,
       slow: stats.slow,
       slowDuration: stats.slowDuration,
+      stun: stats.stun,
+      stunDuration: stats.stunDuration,
+      burnDps: stats.burnDps,
+      burnDuration: stats.burnDuration,
     });
   }
 }
 
 function applyDamage(enemy, amount) {
+  if (amount <= 0) return;
   enemy.hp -= amount;
   state.effects.push({ x: enemy.x, y: enemy.y, r: 4, life: 0.25, color: "#ffffff" });
   if (enemy.hp <= 0) {
@@ -754,8 +1182,37 @@ function applyDamage(enemy, amount) {
   }
 }
 
-function applySlow(enemy, duration) {
+function applySlow(enemy, duration, sourceId = null) {
+  if (sourceId !== null) {
+    enemy.slowSources = enemy.slowSources || {};
+    enemy.slowSources[sourceId] = Math.max(enemy.slowSources[sourceId] || 0, duration);
+    return;
+  }
   enemy.slowTime = Math.max(enemy.slowTime, duration);
+}
+
+function updateSlowSources(enemy, dt) {
+  if (!enemy.slowSources) return 0;
+  let stacks = 0;
+  for (const sourceId of Object.keys(enemy.slowSources)) {
+    enemy.slowSources[sourceId] -= dt;
+    if (enemy.slowSources[sourceId] <= 0) {
+      delete enemy.slowSources[sourceId];
+    } else {
+      stacks += 1;
+    }
+  }
+  return stacks;
+}
+
+function applyStun(enemy, duration) {
+  const bossMod = enemy.boss ? 0.35 : 1;
+  enemy.stunTime = Math.max(enemy.stunTime || 0, duration * bossMod);
+}
+
+function applyBurn(enemy, dps, duration) {
+  enemy.burnDps = Math.max(enemy.burnDps || 0, dps);
+  enemy.burnTime = Math.max(enemy.burnTime || 0, duration);
 }
 
 function resolveProjectileHit(projectile, target) {
@@ -773,6 +1230,12 @@ function resolveProjectileHit(projectile, target) {
     applyDamage(enemy, Math.max(1, Math.round(projectile.damage * distanceMod)));
     if (projectile.slow && state.enemies.includes(enemy)) {
       applySlow(enemy, projectile.slowDuration || 1.4);
+    }
+    if (projectile.stun && state.enemies.includes(enemy)) {
+      applyStun(enemy, projectile.stunDuration || 0.2);
+    }
+    if (projectile.burnDps && state.enemies.includes(enemy)) {
+      applyBurn(enemy, projectile.burnDps, projectile.burnDuration || 2);
     }
   }
 
@@ -798,8 +1261,22 @@ function updateEnemies(dt) {
       enemy.targetIndex = nearestPathIndex(enemy, enemy.path);
     }
 
-    const slowMod = enemy.slowTime > 0 ? 0.48 : 1;
+    if (enemy.burnTime > 0) {
+      applyDamage(enemy, enemy.burnDps * dt);
+      if (!state.enemies.includes(enemy)) continue;
+      enemy.burnTime = Math.max(0, enemy.burnTime - dt);
+      if (enemy.burnTime <= 0) enemy.burnDps = 0;
+    }
+
+    const stunned = enemy.stunTime > 0;
+    const auraSlowStacks = updateSlowSources(enemy, dt);
+    const cappedAuraStacks = Math.min(auraSlowStacks, 2);
+    const auraSlowMod = cappedAuraStacks ? 1 - cappedAuraStacks * 0.32 : 1;
+    const projectileSlowMod = enemy.slowTime > 0 ? 0.48 : 1;
+    const slowMod = Math.min(auraSlowMod, projectileSlowMod);
     enemy.slowTime = Math.max(0, enemy.slowTime - dt);
+    enemy.stunTime = Math.max(0, (enemy.stunTime || 0) - dt);
+    if (stunned) continue;
     let move = enemy.speed * slowMod * dt;
 
     while (move > 0 && enemy.targetIndex < enemy.path.length) {
@@ -863,20 +1340,20 @@ function update(dt) {
   if (waveActive) {
     spawnTimer -= dt;
     if (state.spawned < state.toSpawn && spawnTimer <= 0) {
-      state.enemies.push(makeEnemy(state.spawned));
+      const nextType = state.waveQueue[state.spawned] || "skeleton";
+      const plan = wavePlan(state.wave);
+      state.enemies.push(makeEnemy(nextType));
       state.spawned += 1;
-      spawnTimer =
-        state.wave % 25 === 0 || state.wave % 10 === 0
-          ? Math.max(0.56, 1.05 - state.wave * 0.018)
-          : Math.max(0.28, 0.86 - state.wave * 0.026);
+      spawnTimer = plan.spawnGap;
     }
 
     if (state.spawned >= state.toSpawn && state.enemies.length === 0) {
       waveActive = false;
       state.wave += 1;
-      state.credits += 32 + state.wave * 5;
+      state.credits += scaledGold(32 + state.wave * 5);
       ui.banner.textContent = `Wave cleared. Build for wave ${state.wave}.`;
       ui.start.disabled = false;
+      updateWavePreview();
     }
   }
 
@@ -889,7 +1366,7 @@ function update(dt) {
   updateProjectiles(dt);
   for (const effect of state.effects) {
     effect.life -= dt;
-    effect.r += 75 * dt;
+    if (effect.type !== "line") effect.r += 75 * dt;
   }
   state.effects = state.effects.filter((effect) => effect.life > 0);
   updateHud();
@@ -1085,11 +1562,11 @@ function drawPixelSprite(pattern, x, y, scale, palette, flip = false) {
 }
 
 function defenderSprite(tower, stats) {
-  if (tower.type === "dart") return "archer";
-  if (tower.type === "guard") return "guard";
-  if (tower.type === "rail") return "ballista";
-  if (tower.type === "sky") return "sky";
-  if (tower.type === "mortar") return "catapult";
+  if (tower.type === "dart" || tower.type === "spear") return "archer";
+  if (tower.type === "guard" || tower.type === "grunt" || tower.type === "berserker") return "guard";
+  if (tower.type === "rail" || tower.type === "drummer") return "ballista";
+  if (tower.type === "sky" || tower.type === "wyvern") return "sky";
+  if (tower.type === "mortar" || tower.type === "crusher") return "catapult";
   return "mage";
 }
 
@@ -1109,7 +1586,8 @@ function defenderPalette(stats, tower) {
 }
 
 function enemyPalette(enemy) {
-  const color = enemy.slowTime > 0 ? "#b8f5ff" : enemy.color;
+  const slowed = enemy.slowTime > 0 || Object.keys(enemy.slowSources || {}).length > 0;
+  const color = enemy.stunTime > 0 ? "#f4c95d" : slowed ? "#b8f5ff" : enemy.burnTime > 0 ? "#ff8b3d" : enemy.color;
   return {
     b: "#17120d",
     h: "#8f6f42",
@@ -1229,6 +1707,16 @@ function drawEffects() {
   for (const effect of state.effects) {
     ctx.strokeStyle = effect.color;
     ctx.globalAlpha = clamp(effect.life * 4, 0, 0.7);
+    if (effect.type === "line") {
+      ctx.lineCap = "round";
+      ctx.lineWidth = effect.r;
+      ctx.beginPath();
+      ctx.moveTo(effect.x, effect.y);
+      ctx.lineTo(effect.x2, effect.y2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      continue;
+    }
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, effect.r, 0, Math.PI * 2);
@@ -1310,6 +1798,58 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+function shortTowerName(name) {
+  return name
+    .replace("Shield Guard", "Guard")
+    .replace("Spear Thrower", "Spear")
+    .replace("Frost Wizard", "Frost")
+    .replace("Storm Mage", "Storm")
+    .replace("Flame Mage", "Flame")
+    .replace("Sky Hunter", "Sky");
+}
+
+function renderTowerDock() {
+  const race = races[selectedRace];
+  ui.towerDock.innerHTML = "";
+  race.order.forEach((type, index) => {
+    const tower = race.towers[type];
+    const button = document.createElement("button");
+    button.className = `tower-card${type === selectedBuild ? " active" : ""}`;
+    button.dataset.tower = type;
+    button.title = `${index + 1} - ${tower.name}: ${tower.role}, ${tower.cost}g`;
+
+    const swatch = document.createElement("span");
+    swatch.className = "tower-swatch";
+    swatch.style.background = tower.color;
+
+    const text = document.createElement("span");
+    const name = document.createElement("b");
+    name.textContent = shortTowerName(tower.name);
+    const detail = document.createElement("small");
+    detail.textContent = `${index + 1} - ${tower.cost}g`;
+    text.append(name, detail);
+    button.append(swatch, text);
+    button.addEventListener("click", () => {
+      selectBuild(type);
+    });
+    ui.towerDock.appendChild(button);
+  });
+  ui.towerCards = [...document.querySelectorAll(".tower-card")];
+}
+
+function selectRace(raceKey) {
+  if (raceLocked || waveActive || state.wave > 1 || state.towers.length || state.enemies.length) return;
+  selectedRace = raceKey;
+  towerTypes = races[selectedRace].towers;
+  evolutions = races[selectedRace].evolutions;
+  selectedBuild = races[selectedRace].order[0];
+  selectedTower = null;
+  ui.raceButtons.forEach((button) => button.classList.toggle("active", button.dataset.race === raceKey));
+  ui.raceCopy.textContent = races[selectedRace].description;
+  renderTowerDock();
+  updateHud();
+}
+
 function selectBuild(type) {
   selectedBuild = type;
   selectedTower = null;
@@ -1376,15 +1916,13 @@ function sellSelected() {
   updateHud();
 }
 
-ui.towerCards.forEach((button) => {
-  button.addEventListener("click", () => {
-    selectBuild(button.dataset.tower);
-  });
-});
-
 ui.start.addEventListener("click", startWave);
 ui.restart.addEventListener("click", resetGame);
 ui.difficulty.addEventListener("input", () => {
+  if (difficultyLocked) {
+    ui.difficulty.value = state.difficulty;
+    return;
+  }
   state.difficulty = Number(ui.difficulty.value);
   ui.difficultyValue.textContent = state.difficulty;
 });
@@ -1395,6 +1933,12 @@ ui.pause.addEventListener("click", () => {
 ui.speedButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setGameSpeed(Number(button.dataset.speed));
+  });
+});
+
+ui.raceButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectRace(button.dataset.race);
   });
 });
 
@@ -1474,5 +2018,6 @@ canvas.addEventListener("click", (event) => {
   placeOrSelect(tileFromEvent(event));
 });
 
+renderTowerDock();
 resetGame();
 requestAnimationFrame(loop);

@@ -16,77 +16,29 @@
           </div>
           <div class="stats" aria-live="polite">
             <span><b id="lives">20</b> Keep</span>
-            <span><b id="credits">190</b> Gold</span>
+            <span><b id="credits">230</b> Gold</span>
             <span><b id="wave">1</b> Wave</span>
             <span><b id="score">0</b> Score</span>
           </div>
         </div>
 
-        <div class="board-wrap">
-          <canvas id="game" width="960" height="608" aria-label="Tower defense playfield"></canvas>
-          <div class="banner" id="banner">Place defenders, then start the wave.</div>
+        <div class="play-area">
+          <div class="tower-dock" id="tower-dock" aria-label="Defender selection"></div>
+          <div class="board-wrap">
+            <canvas id="game" width="960" height="608" aria-label="Tower defense playfield"></canvas>
+            <div class="banner" id="banner">Place defenders, then start the wave.</div>
+          </div>
         </div>
       </section>
 
       <aside class="controls" aria-label="Game controls">
-        <div class="tool-group">
-          <h2>Defenders</h2>
-          <button class="tower-card active" data-tower="dart">
-            <span class="tower-swatch dart"></span>
-            <span>
-              <b>Archer</b>
-              <small>1 - Fast single, 35g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="guard">
-            <span class="tower-swatch guard"></span>
-            <span>
-              <b>Shield Guard</b>
-              <small>2 - Melee wall, 30g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="rail">
-            <span class="tower-swatch rail"></span>
-            <span>
-              <b>Ballista</b>
-              <small>3 - Slow single, 65g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="sky">
-            <span class="tower-swatch sky"></span>
-            <span>
-              <b>Sky Hunter</b>
-              <small>4 - Anti-air, 80g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="chain">
-            <span class="tower-swatch chain"></span>
-            <span>
-              <b>Storm Mage</b>
-              <small>5 - Moderate chain, 75g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="flak">
-            <span class="tower-swatch flak"></span>
-            <span>
-              <b>Flame Mage</b>
-              <small>6 - Fast AOE, 60g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="mortar">
-            <span class="tower-swatch mortar"></span>
-            <span>
-              <b>Catapult</b>
-              <small>7 - Slow AOE, 95g</small>
-            </span>
-          </button>
-          <button class="tower-card" data-tower="frost">
-            <span class="tower-swatch frost"></span>
-            <span>
-              <b>Frost Wizard</b>
-              <small>8 - AOE slow, 70g</small>
-            </span>
-          </button>
+        <div class="tool-group race-panel">
+          <h2>Castle Race</h2>
+          <div class="race-buttons" id="race-buttons">
+            <button class="race-button active" data-race="human">Human</button>
+            <button class="race-button" data-race="orc">Orc</button>
+          </div>
+          <p id="race-copy">Balanced defenders with siege, mages, and anti-air.</p>
         </div>
 
         <div class="tool-group selected">
@@ -109,11 +61,19 @@
           <button id="restart">Restart</button>
         </div>
 
+        <div class="tool-group wave-preview">
+          <h2>Next Wave</h2>
+          <strong id="preview-name">Skeleton Probe</strong>
+          <p id="preview-details">Skeletons test your first maze.</p>
+          <div class="preview-tags" id="preview-tags"></div>
+        </div>
+
         <div class="tool-group">
           <h2>Run Tuning</h2>
           <label class="range-control" for="difficulty">
             <span>Difficulty <b id="difficulty-value">3</b></span>
             <input id="difficulty" type="range" min="1" max="5" step="1" value="3" />
+            <small id="difficulty-lock">Locks when the first wave starts.</small>
           </label>
           <div class="speed-control" aria-label="Game speed">
             <button class="speed-button active" data-speed="1">1x</button>
