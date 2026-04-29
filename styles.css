@@ -137,11 +137,12 @@ small {
   display: grid;
   place-items: center;
   min-height: 0;
+  overflow: hidden;
 }
 
 canvas {
-  width: min(100%, calc((100vh - 128px) * 1.579));
-  max-height: calc(100vh - 128px);
+  width: min(100%, calc((100vh - 210px) * 1.579));
+  max-height: calc(100vh - 210px);
   aspect-ratio: 960 / 608;
   border: 1px solid #6b5737;
   border-radius: 8px;
@@ -167,9 +168,13 @@ canvas {
 }
 
 .tower-dock {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   gap: 8px;
+  min-height: 66px;
   padding: 8px;
   border: 1px solid rgba(244, 201, 93, 0.28);
   border-radius: 8px;
