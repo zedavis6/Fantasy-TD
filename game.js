@@ -46,7 +46,7 @@ const humanTowerTypes = {
     color: "#f4c95d",
     range: 132,
     fireRate: 0.32,
-    damage: 9,
+    damage: 18,
     projectileSpeed: 520,
   },
   guard: {
@@ -69,7 +69,7 @@ const humanTowerTypes = {
     color: "#c9c3ae",
     range: 158,
     fireRate: 1.18,
-    damage: 44,
+    damage: 86,
     projectileSpeed: 620,
   },
   sky: {
@@ -279,7 +279,25 @@ const humanEvolutions = {
       slowDurationAdd: 1.8,
       rangeAdd: 18,
       glyph: "D",
-      final: { name: "Winter Prison", desc: "Extreme long-duration slow", slowDurationAdd: 2.2, rangeAdd: 28, glyph: "P" },
+      forks: {
+        a: {
+          name: "Permafrost",
+          desc: "Even longer single-target control",
+          slowDurationAdd: 1.4,
+          rangeAdd: 18,
+          glyph: "P",
+          final: { name: "Winter Prison", desc: "Extreme long-duration slow", slowDurationAdd: 2.6, rangeAdd: 34, glyph: "P" },
+        },
+        b: {
+          name: "Snap Freeze",
+          desc: "Short stun on chilled targets",
+          stun: true,
+          stunDuration: 0.16,
+          fireRateMult: 0.9,
+          glyph: "S",
+          final: { name: "Crystal Lock", desc: "Harder control bursts", stunDurationAdd: 0.16, damageMult: 1.6, glyph: "L" },
+        },
+      },
     },
     b: {
       name: "Ice Shards",
@@ -288,7 +306,27 @@ const humanEvolutions = {
       damageMult: 1.45,
       fireRateMult: 1.08,
       glyph: "I",
-      final: { name: "Glacier Bloom", desc: "Large AOE slow bursts", splashRadiusAdd: 38, damageMult: 1.35, glyph: "G" },
+      forks: {
+        a: {
+          name: "Hail Needles",
+          desc: "Faster, smaller splash, shorter slow",
+          fireRateMult: 0.58,
+          splashRadiusAdd: -18,
+          slowDurationAdd: -0.65,
+          damageMult: 1.18,
+          glyph: "H",
+          final: { name: "Needle Storm", desc: "Relentless fast ice bursts", fireRateMult: 0.52, damageMult: 1.35, glyph: "N" },
+        },
+        b: {
+          name: "Glacier Bloom",
+          desc: "Slower, larger splash, longer slow",
+          fireRateMult: 1.22,
+          splashRadiusAdd: 34,
+          slowDurationAdd: 0.95,
+          glyph: "G",
+          final: { name: "Frozen Garden", desc: "Huge slow blooms", splashRadiusAdd: 46, slowDurationAdd: 1.2, damageMult: 1.25, glyph: "F" },
+        },
+      },
     },
   },
 };
@@ -317,7 +355,7 @@ const orcTowerTypes = {
     range: 154,
     rangeGrowth: 3,
     fireRate: 0.48,
-    damage: 10,
+    damage: 13,
     projectileSpeed: 0,
     lineStrike: true,
     lineWidth: 22,
@@ -331,7 +369,7 @@ const orcTowerTypes = {
     range: 54,
     rangeGrowth: 3,
     fireRate: 0.34,
-    damage: 20,
+    damage: 38,
     projectileSpeed: 0,
     melee: true,
     groundOnly: true,
@@ -420,8 +458,30 @@ const orcEvolutions = {
     b: { name: "Axe Cleave", desc: "Becomes a real cleaving damage unit", multiShot: 3, damageMult: 3.1, fireRateMult: 0.92, glyph: "A", final: { name: "Axe Mob", desc: "Wide cleaving melee", multiShot: 5, damageMult: 1.25, glyph: "M" } },
   },
   spear: {
-    a: { name: "Quick Spears", desc: "Very fast line strikes", fireRateMult: 0.56, damageMult: 0.78, glyph: "Q", final: { name: "Spear Storm", desc: "Extreme line speed", fireRateMult: 0.58, damageMult: 1.08, glyph: "T" } },
-    b: { name: "Barbed Spears", desc: "Harder piercing lines", damageMult: 1.35, fireRateMult: 1.1, lineWidthAdd: 8, glyph: "B", final: { name: "Impaler", desc: "Huge piercing line hits", damageMult: 1.35, lineWidthAdd: 10, glyph: "I" } },
+    a: {
+      name: "Quick Spears",
+      desc: "Fast, narrow line strikes",
+      fireRateMult: 0.56,
+      damageMult: 0.78,
+      lineWidthAdd: -5,
+      glyph: "Q",
+      forks: {
+        a: { name: "Needle Volley", desc: "Even faster narrow lines", fireRateMult: 0.58, damageMult: 0.92, glyph: "V", final: { name: "Spear Storm", desc: "Extreme line speed", fireRateMult: 0.52, damageMult: 1.18, glyph: "T" } },
+        b: { name: "Long Skewer", desc: "Longer narrow line", rangeAdd: 24, damageMult: 1.08, glyph: "L", final: { name: "Horizon Skewer", desc: "Long, lethal narrow pierce", rangeAdd: 30, damageMult: 1.28, glyph: "H" } },
+      },
+    },
+    b: {
+      name: "Barbed Spears",
+      desc: "Normal speed, wider line",
+      damageMult: 1.25,
+      fireRateMult: 1.1,
+      lineWidthAdd: 10,
+      glyph: "B",
+      forks: {
+        a: { name: "Impaler", desc: "Flat burst damage", damageMult: 1.45, lineWidthAdd: 8, glyph: "I", final: { name: "Giant Impaler", desc: "Huge flat line damage", damageMult: 1.55, lineWidthAdd: 10, glyph: "G" } },
+        b: { name: "Bleeding Barbs", desc: "Lower hit, adds bleed", damageMult: 0.82, bleedDps: 18, bleedDuration: 3.2, glyph: "D", final: { name: "Blood Hooks", desc: "Heavy bleeding pierce", bleedDpsMult: 1.9, bleedDurationAdd: 1.8, glyph: "K" } },
+      },
+    },
   },
   berserker: {
     a: { name: "Blood Frenzy", desc: "Rapid strikes across nearby enemies", fireRateMult: 0.5, damageMult: 1.08, multiShot: 2, glyph: "F", final: { name: "Red Rage", desc: "Relentless multi-target melee", fireRateMult: 0.58, multiShot: 4, glyph: "R" } },
@@ -432,8 +492,28 @@ const orcEvolutions = {
     b: { name: "Net Spears", desc: "AOE anti-air blasts", splashRadiusAdd: 58, damageMult: 0.78, glyph: "N", final: { name: "Net Storm", desc: "Huge anti-air splash", splashRadiusAdd: 58, damageMult: 1.35, glyph: "M" } },
   },
   drummer: {
-    a: { name: "Battle Rhythm", desc: "Faster aura pulses", fireRateMult: 0.55, damageMult: 1.1, glyph: "R", final: { name: "War Chant", desc: "Rapid area pressure", fireRateMult: 0.55, damageMult: 1.2, glyph: "C" } },
-    b: { name: "Thunder Drum", desc: "Wider, harder aura", rangeAdd: 28, damageMult: 1.35, glyph: "T", final: { name: "Earth Drum", desc: "Huge damage aura", rangeAdd: 32, damageMult: 1.25, glyph: "E" } },
+    a: {
+      name: "Battle Rhythm",
+      desc: "Faster aura pulses",
+      fireRateMult: 0.55,
+      damageMult: 1.1,
+      glyph: "R",
+      forks: {
+        a: { name: "Frenzy Chant", desc: "Even faster aura pulses", fireRateMult: 0.62, damageMult: 1.08, glyph: "F", final: { name: "War Chant", desc: "Blinding pulse rhythm", fireRateMult: 0.55, damageMult: 1.2, glyph: "C" } },
+        b: { name: "Blood Tempo", desc: "Slower but harder pulses", fireRateMult: 1.28, damageMult: 1.75, glyph: "B", final: { name: "Blood Festival", desc: "Crushing aura pulses", damageMult: 1.65, glyph: "V" } },
+      },
+    },
+    b: {
+      name: "Thunder Drum",
+      desc: "Wider, harder aura",
+      rangeAdd: 28,
+      damageMult: 1.35,
+      glyph: "T",
+      forks: {
+        a: { name: "Earth Drum", desc: "Larger aura", rangeAdd: 34, damageMult: 1.1, glyph: "E", final: { name: "World Drum", desc: "Huge damage aura", rangeAdd: 42, damageMult: 1.25, glyph: "W" } },
+        b: { name: "Armor Break", desc: "Aura makes enemies vulnerable", vulnMult: 1.18, vulnDuration: 1.6, glyph: "A", final: { name: "Shatter Rhythm", desc: "Stronger vulnerability aura", vulnMultAdd: 0.14, vulnDurationAdd: 1.0, glyph: "S" } },
+      },
+    },
   },
   firepot: {
     a: { name: "Oil Fire", desc: "Wider, longer burns", splashRadiusAdd: 30, burnDurationAdd: 1.2, glyph: "O", final: { name: "Burn Pit", desc: "Huge lingering burn", splashRadiusAdd: 46, burnDurationAdd: 1.4, fireRateMult: 0.84, glyph: "P" } },
@@ -659,22 +739,14 @@ function enemyProgress(enemy) {
 
 function difficultyStats() {
   const level = state.difficulty;
-  const rewardByDifficulty = {
-    1: 1,
-    2: 1.12,
-    3: 1.45,
-    4: 1.95,
-    5: 2.55,
-  };
   return {
     hp: 1 + (level - 1) * 0.22,
     speed: 1 + (level - 1) * 0.07,
-    reward: rewardByDifficulty[level] || 1,
   };
 }
 
 function scaledGold(amount) {
-  return Math.round(amount * difficultyStats().reward);
+  return Math.round(amount);
 }
 
 function flyingPath() {
@@ -696,15 +768,56 @@ function shuffled(items, seed) {
   return copy;
 }
 
+function lateWaveMix(wave, focus = "balanced", leaders = []) {
+  const counts = {
+    skeleton: 14 + Math.floor(wave * 1.25),
+    centaur: 4 + Math.floor(wave / 6),
+    knight: 3 + Math.floor(wave / 7),
+    splitter: 2 + Math.floor(wave / 10),
+    dragon: wave % 3 === 0 ? 1 + Math.floor(wave / 30) : 0,
+  };
+
+  if (focus === "fast") {
+    counts.centaur += 5 + Math.floor(wave / 9);
+    counts.skeleton = Math.max(10, counts.skeleton - 5);
+  } else if (focus === "armor") {
+    counts.knight += 4 + Math.floor(wave / 10);
+    counts.centaur += 2;
+  } else if (focus === "split") {
+    counts.splitter += 3 + Math.floor(wave / 12);
+    counts.centaur += 2;
+  } else if (focus === "air") {
+    counts.dragon += 2 + Math.floor(wave / 18);
+    counts.centaur += 2;
+    counts.skeleton = Math.max(8, counts.skeleton - 8);
+  } else if (focus === "boss") {
+    counts.knight += 2 + Math.floor(wave / 12);
+    counts.splitter += 1 + Math.floor(wave / 18);
+    counts.skeleton = Math.max(8, counts.skeleton - 10);
+  }
+
+  return shuffled(
+    [
+      ...leaders,
+      ...repeatType("skeleton", counts.skeleton),
+      ...repeatType("centaur", counts.centaur),
+      ...repeatType("knight", counts.knight),
+      ...repeatType("splitter", counts.splitter),
+      ...repeatType("dragon", counts.dragon),
+    ],
+    wave + leaders.length * 19,
+  );
+}
+
 function wavePlan(wave) {
   if (wave % 25 === 0) {
     const extra = Math.floor(wave / 25) * 2;
     return {
       name: "Flying Boss",
       details: "An Elder Dragon ignores the maze. Sky Hunters matter.",
-      tags: ["flying boss", "anti-air", "high damage"],
-      queue: ["flyingBoss", ...repeatType("dragon", extra)],
-      spawnGap: Math.max(0.7, 1.15 - wave * 0.014),
+      tags: wave > 25 ? ["flying boss", "mixed", "anti-air", "cleanup"] : ["flying boss", "anti-air", "high damage"],
+      queue: wave > 25 ? lateWaveMix(wave, "air", ["flyingBoss", ...repeatType("dragon", extra)]) : ["flyingBoss", ...repeatType("dragon", extra)],
+      spawnGap: wave > 25 ? Math.max(0.34, 0.8 - wave * 0.009) : Math.max(0.7, 1.15 - wave * 0.014),
     };
   }
 
@@ -712,10 +825,44 @@ function wavePlan(wave) {
     const guards = Math.floor(wave / 10) * 2;
     return {
       name: "Ground Boss",
-      details: "A Siege Lord follows the maze with knight support.",
-      tags: ["ground boss", "armor", "single-target"],
-      queue: ["groundBoss", ...repeatType("knight", guards)],
-      spawnGap: Math.max(0.62, 1.05 - wave * 0.014),
+      details: wave > 25 ? "A Siege Lord advances inside a mixed army." : "A Siege Lord follows the maze with knight support.",
+      tags: wave > 25 ? ["ground boss", "mixed", "armor", "cleanup"] : ["ground boss", "armor", "single-target"],
+      queue: wave > 25 ? lateWaveMix(wave, "boss", ["groundBoss", ...repeatType("knight", guards)]) : ["groundBoss", ...repeatType("knight", guards)],
+      spawnGap: wave > 25 ? Math.max(0.34, 0.82 - wave * 0.01) : Math.max(0.62, 1.05 - wave * 0.014),
+    };
+  }
+
+  if (wave >= 12 && wave % 8 === 0) {
+    return {
+      name: "Mixed Vanguard",
+      details: "Knights hold the lane while centaurs sprint through gaps.",
+      tags: ["mixed", "tanky", "fast"],
+      queue: wave > 25 ? lateWaveMix(wave, "balanced") : shuffled(
+        [
+          ...repeatType("knight", 3 + Math.floor(wave / 5)),
+          ...repeatType("centaur", 4 + Math.floor(wave / 4)),
+          ...repeatType("skeleton", 6 + wave),
+        ],
+        wave,
+      ),
+      spawnGap: Math.max(0.32, 0.78 - wave * 0.014),
+    };
+  }
+
+  if (wave >= 8 && wave % 6 === 0) {
+    return {
+      name: "Bone Carriers",
+      details: "Tanky carriers split into skeletons when killed.",
+      tags: ["split", "tanky", "cleanup"],
+      queue: wave > 25 ? lateWaveMix(wave, "split") : shuffled(
+        [
+          ...repeatType("splitter", 2 + Math.floor(wave / 6)),
+          ...repeatType("centaur", 2 + Math.floor(wave / 5)),
+          ...repeatType("skeleton", 5 + wave),
+        ],
+        wave,
+      ),
+      spawnGap: Math.max(0.34, 0.84 - wave * 0.015),
     };
   }
 
@@ -723,9 +870,16 @@ function wavePlan(wave) {
     const dragons = 2 + Math.floor(wave / 14);
     return {
       name: "Dragon Skies",
-      details: "Flying dragons cut across the field.",
-      tags: ["flying", "anti-air"],
-      queue: shuffled([...repeatType("dragon", dragons), ...repeatType("skeleton", 5 + wave)], wave),
+      details: wave > 25 ? "Dragons arrive above a mixed ground push." : "Flying dragons cut across the field.",
+      tags: wave > 25 ? ["flying", "mixed", "anti-air"] : ["flying", "anti-air"],
+      queue: wave > 25 ? lateWaveMix(wave, "air") : shuffled(
+        [
+          ...repeatType("dragon", dragons),
+          ...repeatType("centaur", Math.floor(wave / 7)),
+          ...repeatType("skeleton", 5 + wave),
+        ],
+        wave,
+      ),
       spawnGap: Math.max(0.34, 0.82 - wave * 0.018),
     };
   }
@@ -733,9 +887,16 @@ function wavePlan(wave) {
   if (wave > 5 && wave % 5 === 0) {
     return {
       name: "Knight Push",
-      details: "Fallen knights test focused damage and long lanes.",
-      tags: ["armor", "tanky"],
-      queue: shuffled([...repeatType("knight", 4 + Math.floor(wave / 3)), ...repeatType("skeleton", 6 + wave)], wave),
+      details: wave > 25 ? "Armored knights anchor a varied lane assault." : "Fallen knights test focused damage and long lanes.",
+      tags: wave > 25 ? ["armor", "mixed", "tanky"] : ["armor", "tanky"],
+      queue: wave > 25 ? lateWaveMix(wave, "armor") : shuffled(
+        [
+          ...repeatType("knight", 4 + Math.floor(wave / 3)),
+          ...repeatType("splitter", wave >= 15 ? 1 + Math.floor(wave / 15) : 0),
+          ...repeatType("skeleton", 6 + wave),
+        ],
+        wave,
+      ),
       spawnGap: Math.max(0.38, 0.9 - wave * 0.018),
     };
   }
@@ -743,18 +904,30 @@ function wavePlan(wave) {
   if (wave > 3 && wave % 4 === 0) {
     return {
       name: "Centaur Rush",
-      details: "Fast centaurs punish short or leaky mazes.",
-      tags: ["fast", "rush"],
-      queue: shuffled([...repeatType("centaur", 5 + Math.floor(wave / 2)), ...repeatType("skeleton", 5 + wave)], wave),
+      details: wave > 25 ? "Fast centaurs lead a mixed wave through weak turns." : "Fast centaurs punish short or leaky mazes.",
+      tags: wave > 25 ? ["fast", "mixed", "rush"] : ["fast", "rush"],
+      queue: wave > 25 ? lateWaveMix(wave, "fast") : shuffled([...repeatType("centaur", 5 + Math.floor(wave / 2)), ...repeatType("skeleton", 5 + wave)], wave),
       spawnGap: Math.max(0.26, 0.7 - wave * 0.014),
     };
   }
 
   return {
-    name: wave < 3 ? "Skeleton Probe" : "Skeleton Swarm",
-    details: wave < 3 ? "Skeletons test your first maze." : "A broad skeleton wave rewards clean path length.",
-    tags: ["baseline", "maze value"],
-    queue: repeatType("skeleton", 9 + wave * 3),
+    name: wave > 25 ? "Warband" : wave < 3 ? "Skeleton Probe" : "Skeleton Swarm",
+    details: wave > 25 ? "A varied army checks every part of the maze." : wave < 3 ? "Skeletons test your first maze." : "A broad skeleton wave rewards clean path length.",
+    tags: wave > 25 ? ["mixed", "baseline", "coverage"] : ["baseline", "maze value"],
+    queue:
+      wave > 25
+        ? lateWaveMix(wave, "balanced")
+        : wave >= 11
+          ? shuffled(
+              [
+                ...repeatType("skeleton", 8 + wave * 2),
+                ...repeatType("centaur", Math.floor(wave / 5)),
+                ...repeatType("knight", Math.floor(wave / 7)),
+              ],
+              wave,
+            )
+          : repeatType("skeleton", 9 + wave * 3),
     spawnGap: Math.max(0.28, 0.86 - wave * 0.026),
   };
 }
@@ -771,7 +944,7 @@ function updateWavePreview() {
   }
 }
 
-function makeEnemy(type = "skeleton") {
+function makeEnemy(type = "skeleton", overrides = null) {
   const wave = state.wave;
   const flyingBoss = type === "flyingBoss";
   const groundBoss = type === "groundBoss";
@@ -779,41 +952,55 @@ function makeEnemy(type = "skeleton") {
   const dragon = flyingBoss || type === "dragon";
   const runner = type === "centaur";
   const bruiser = type === "knight";
+  const splitter = type === "splitter";
   const difficulty = difficultyStats();
-  const waveScale = 1 + Math.max(0, wave - 1) * 0.055;
+  const lateWave = Math.max(0, wave - 12);
+  const waveScale = 1 + Math.max(0, wave - 1) * 0.07 + lateWave * lateWave * 0.0016;
   const baseHp = flyingBoss
-    ? 1300 + wave * 120
+    ? 1450 + wave * 135
     : groundBoss
-      ? 920 + wave * 92
+      ? 1040 + wave * 108
     : dragon
-      ? 420 + wave * 44
+      ? 470 + wave * 52
       : bruiser
-        ? 185 + wave * 26
-        : 86 + wave * 18;
+        ? 215 + wave * 32
+        : splitter
+          ? 260 + wave * 36
+          : runner
+            ? 80 + wave * 17
+            : 92 + wave * 21;
   const hp = Math.round(baseHp * waveScale * difficulty.hp);
   const start = tileCenter(spawnTile);
-  return {
+  const enemy = {
     x: start.x - 34,
     y: start.y,
     path: flyingBoss || dragon ? flyingPath() : currentPath.length ? currentPath : findPath(),
     targetIndex: 0,
     hp,
     maxHp: hp,
-    speed: (flyingBoss ? 33 + wave * 0.8 : groundBoss ? 36 + wave * 0.9 : dragon ? 42 + wave * 1.1 : runner ? 96 + wave * 2.2 : bruiser ? 43 + wave * 1.2 : 63 + wave * 1.7) * difficulty.speed,
-    reward: scaledGold(flyingBoss ? 170 + wave * 4 : groundBoss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 16 : runner ? 10 : 8),
-    radius: flyingBoss ? 25 : groundBoss ? 23 : dragon ? 18 : bruiser ? 14 : runner ? 9 : 11,
-    color: flyingBoss ? "#8f2520" : groundBoss ? "#7b6552" : dragon ? "#d13f2f" : bruiser ? "#b9b2a2" : runner ? "#73c66b" : "#d9d1bd",
-    name: flyingBoss ? "Elder Dragon" : groundBoss ? "Siege Lord" : dragon ? "Dragon" : bruiser ? "Fallen Knight" : runner ? "Centaur" : "Skeleton",
-    glyph: flyingBoss ? "B" : groundBoss ? "L" : dragon ? "D" : bruiser ? "K" : runner ? "C" : "S",
+    speed: (flyingBoss ? 33 + wave * 0.8 : groundBoss ? 36 + wave * 0.9 : dragon ? 42 + wave * 1.1 : runner ? 104 + wave * 2.35 : bruiser ? 42 + wave * 1.15 : splitter ? 46 + wave * 1.1 : 64 + wave * 1.75) * difficulty.speed,
+    reward: scaledGold(flyingBoss ? 170 + wave * 4 : groundBoss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 17 : splitter ? 18 : runner ? 10 : 8),
+    radius: flyingBoss ? 25 : groundBoss ? 23 : dragon ? 18 : bruiser ? 14 : splitter ? 15 : runner ? 9 : 11,
+    color: flyingBoss ? "#8f2520" : groundBoss ? "#7b6552" : dragon ? "#d13f2f" : bruiser ? "#b9b2a2" : splitter ? "#b8935b" : runner ? "#73c66b" : "#d9d1bd",
+    name: flyingBoss ? "Elder Dragon" : groundBoss ? "Siege Lord" : dragon ? "Dragon" : bruiser ? "Fallen Knight" : splitter ? "Bone Carrier" : runner ? "Centaur" : "Skeleton",
+    glyph: flyingBoss ? "B" : groundBoss ? "L" : dragon ? "D" : bruiser ? "K" : splitter ? "P" : runner ? "C" : "S",
     flying: flyingBoss || dragon,
     boss,
     livesDamage: flyingBoss ? 6 : groundBoss ? 4 : dragon ? 2 : 1,
+    deathSpawnType: splitter ? "skeleton" : null,
+    deathSpawnCount: splitter ? 3 : 0,
     slowTime: 0,
     slowSources: {},
     burnTime: 0,
     burnDps: 0,
+    bleedTime: 0,
+    bleedDps: 0,
+    vulnTime: 0,
+    vulnMult: 1,
     stunTime: 0,
   };
+  if (overrides) Object.assign(enemy, overrides);
+  return enemy;
 }
 
 function startWave() {
@@ -891,6 +1078,7 @@ function createTower(type, tile) {
     y: center.y,
     level: 1,
     evolution: null,
+    specialization: null,
     finalForm: false,
     spent: base.cost,
     cooldown: 0,
@@ -903,6 +1091,14 @@ function applyStatModifier(stats, modifier) {
   if (modifier.damageMult !== undefined) stats.damage = Math.max(1, Math.round(stats.damage * modifier.damageMult));
   if (modifier.burnDpsMult !== undefined) stats.burnDps = Math.max(1, Math.round((stats.burnDps || 0) * modifier.burnDpsMult));
   if (modifier.burnDurationAdd !== undefined) stats.burnDuration = (stats.burnDuration || 0) + modifier.burnDurationAdd;
+  if (modifier.bleedDps !== undefined) stats.bleedDps = modifier.bleedDps;
+  if (modifier.bleedDpsMult !== undefined) stats.bleedDps = Math.max(1, Math.round((stats.bleedDps || 0) * modifier.bleedDpsMult));
+  if (modifier.bleedDuration !== undefined) stats.bleedDuration = modifier.bleedDuration;
+  if (modifier.bleedDurationAdd !== undefined) stats.bleedDuration = (stats.bleedDuration || 0) + modifier.bleedDurationAdd;
+  if (modifier.vulnMult !== undefined) stats.vulnMult = modifier.vulnMult;
+  if (modifier.vulnMultAdd !== undefined) stats.vulnMult = (stats.vulnMult || 1) + modifier.vulnMultAdd;
+  if (modifier.vulnDuration !== undefined) stats.vulnDuration = modifier.vulnDuration;
+  if (modifier.vulnDurationAdd !== undefined) stats.vulnDuration = (stats.vulnDuration || 0) + modifier.vulnDurationAdd;
   if (modifier.fireRateMult !== undefined) stats.fireRate = Math.max(0.14, stats.fireRate * modifier.fireRateMult);
   if (modifier.rangeAdd !== undefined) stats.range = Math.max(32, stats.range + modifier.rangeAdd);
   if (modifier.splashRadiusAdd !== undefined) stats.splashRadius = Math.max(0, (stats.splashRadius || 0) + modifier.splashRadiusAdd);
@@ -925,7 +1121,8 @@ function applyStatModifier(stats, modifier) {
 function towerStats(tower) {
   const base = towerTypes[tower.type];
   const evolution = tower.evolution ? evolutions[tower.type]?.[tower.evolution] : null;
-  const finalForm = tower.finalForm ? evolution?.final : null;
+  const specialization = tower.specialization ? evolution?.forks?.[tower.specialization] : null;
+  const finalForm = tower.finalForm ? specialization?.final || evolution?.final : null;
   const levelBoost = 1 + (tower.level - 1) * 0.34;
   const stats = {
     ...base,
@@ -942,6 +1139,11 @@ function towerStats(tower) {
   stats.name = `${base.name}: ${evolution.name}`;
   stats.glyph = evolution.glyph || stats.glyph;
   applyStatModifier(stats, evolution);
+  if (specialization) {
+    stats.name = `${base.name}: ${specialization.name}`;
+    stats.glyph = specialization.glyph || stats.glyph;
+    applyStatModifier(stats, specialization);
+  }
   if (finalForm) {
     stats.name = `${base.name}: ${finalForm.name}`;
     stats.glyph = finalForm.glyph || stats.glyph;
@@ -961,8 +1163,12 @@ function evolutionCost(tower) {
   return Math.round((150 + towerTypes[tower.type].cost) * 1.3);
 }
 
+function specializationCost(tower) {
+  return 520 + towerTypes[tower.type].cost * 3;
+}
+
 function finalFormCost(tower) {
-  return 420 + towerTypes[tower.type].cost * 2;
+  return 1400 + towerTypes[tower.type].cost * 5;
 }
 
 function sellValue(tower) {
@@ -981,16 +1187,28 @@ function updateSelection() {
 
   const stats = towerStats(selectedTower);
   const cost = upgradeCost(selectedTower);
+  const options = evolutions[selectedTower.type];
+  const currentEvolution = selectedTower.evolution ? options?.[selectedTower.evolution] : null;
+  const hasLevelEightForks = Boolean(currentEvolution?.forks);
+  const pendingEvolution = selectedTower.level >= 4 && !selectedTower.evolution && options;
+  const pendingSpecialization =
+    selectedTower.level >= 8 && selectedTower.evolution && hasLevelEightForks && !selectedTower.specialization;
+  const pendingFinal =
+    selectedTower.level >= 12 &&
+    selectedTower.evolution &&
+    !selectedTower.finalForm &&
+    (selectedTower.specialization ? currentEvolution?.forks?.[selectedTower.specialization]?.final : currentEvolution?.final);
   const nextUpgradeText =
-    selectedTower.level >= 8
-      ? selectedTower.evolution && !selectedTower.finalForm
-        ? "Final form available"
+    selectedTower.level >= 12
+      ? pendingFinal
+        ? "Level 12 capstone available"
         : "Max level"
-      : selectedTower.level >= 4 && !selectedTower.evolution
-        ? "Choose an evolution"
+      : pendingSpecialization
+        ? "Choose a level 8 branch"
+        : pendingEvolution
+          ? "Choose an evolution"
         : `Upgrade ${cost}g`;
   const extras = [];
-  const options = evolutions[selectedTower.type];
   if (stats.melee) extras.push("melee");
   if (stats.antiAirOnly) extras.push("flying only");
   if (stats.auraSlow || stats.auraDamage) extras.push("aura");
@@ -998,32 +1216,38 @@ function updateSelection() {
   if (stats.shockwave) extras.push("shockwave");
   if (stats.stun) extras.push("stuns");
   if (stats.burnDps) extras.push("burns");
+  if (stats.bleedDps) extras.push("bleeds");
+  if (stats.vulnMult) extras.push("breaks armor");
   if (stats.multiShot) extras.push(`${stats.multiShot} shots`);
   if (stats.chain) extras.push(`${stats.chainCount} chains`);
   if (stats.splashRadius) extras.push(`${Math.round(stats.splashRadius)} splash`);
   if (stats.slow) extras.push("slows");
-  if (selectedTower.finalForm) extras.push("final");
+  if (selectedTower.finalForm) extras.push("capstone");
   ui.selectionTitle.textContent = `${stats.name} L${selectedTower.level}`;
   ui.selectionCopy.textContent = `Damage ${stats.damage}, range ${Math.round(stats.range)}${extras.length ? `, ${extras.join(", ")}` : ""}. ${nextUpgradeText}, sell ${sellValue(selectedTower)}g.`;
-  ui.upgrade.disabled = selectedTower.level >= 8 || (selectedTower.level >= 4 && !selectedTower.evolution) || state.credits < cost;
+  ui.upgrade.disabled =
+    selectedTower.level >= 12 || pendingEvolution || pendingSpecialization || state.credits < cost;
   ui.sell.disabled = false;
 
-  const canEvolve = selectedTower.level >= 4 && !selectedTower.evolution && options;
-  const canFinal = selectedTower.level >= 8 && selectedTower.evolution && !selectedTower.finalForm && options?.[selectedTower.evolution]?.final;
-  ui.evolutionPanel.hidden = !(canEvolve || canFinal);
+  const canEvolve = pendingEvolution;
+  const canSpecialize = pendingSpecialization;
+  const canFinal = pendingFinal;
+  ui.evolutionPanel.hidden = !(canEvolve || canSpecialize || canFinal);
   ui.evolutionButtons.forEach((button) => {
     if (canFinal) {
-      const final = options[selectedTower.evolution].final;
+      const final = selectedTower.specialization
+        ? currentEvolution.forks[selectedTower.specialization].final
+        : currentEvolution.final;
       const cost = finalFormCost(selectedTower);
       button.hidden = button.dataset.evolution !== "a";
       button.disabled = state.credits < cost;
       button.textContent = `${final.name}: ${final.desc} (${cost}g)`;
       return;
     }
-    const option = options?.[button.dataset.evolution];
-    const cost = evolutionCost(selectedTower);
+    const option = canSpecialize ? currentEvolution?.forks?.[button.dataset.evolution] : options?.[button.dataset.evolution];
+    const cost = canSpecialize ? specializationCost(selectedTower) : evolutionCost(selectedTower);
     button.hidden = false;
-    button.disabled = !canEvolve || !option || state.credits < cost;
+    button.disabled = !(canEvolve || canSpecialize) || !option || state.credits < cost;
     button.textContent = option ? `${option.name}: ${option.desc} (${cost}g)` : "";
   });
 }
@@ -1090,6 +1314,9 @@ function fireTower(tower) {
 
   if (stats.auraDamage) {
     for (const enemy of targets) {
+      if (stats.vulnMult && state.enemies.includes(enemy)) {
+        applyVulnerability(enemy, stats.vulnMult, stats.vulnDuration || 1.4);
+      }
       applyDamage(enemy, stats.damage);
     }
     state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.18, color: stats.color });
@@ -1121,6 +1348,9 @@ function fireTower(tower) {
     const lineTargets = plan.hits.sort((a, b) => enemyProgress(b) - enemyProgress(a));
     for (const enemy of lineTargets) {
       applyDamage(enemy, stats.damage);
+      if (stats.bleedDps && state.enemies.includes(enemy)) {
+        applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3);
+      }
     }
     state.effects.push({
       type: "line",
@@ -1167,19 +1397,60 @@ function fireTower(tower) {
       stunDuration: stats.stunDuration,
       burnDps: stats.burnDps,
       burnDuration: stats.burnDuration,
+      bleedDps: stats.bleedDps,
+      bleedDuration: stats.bleedDuration,
     });
   }
 }
 
 function applyDamage(enemy, amount) {
   if (amount <= 0) return;
-  enemy.hp -= amount;
+  const damage = amount * (enemy.vulnTime > 0 ? enemy.vulnMult || 1 : 1);
+  enemy.hp -= damage;
   state.effects.push({ x: enemy.x, y: enemy.y, r: 4, life: 0.25, color: "#ffffff" });
   if (enemy.hp <= 0) {
+    spawnDeathChildren(enemy);
     state.credits += enemy.reward;
     state.score += enemy.reward * 12;
     state.enemies = state.enemies.filter((item) => item !== enemy);
   }
+}
+
+function spawnDeathChildren(enemy) {
+  if (!enemy.deathSpawnType || !enemy.deathSpawnCount) return;
+  const childCount = enemy.deathSpawnCount;
+  const baseHp = Math.max(18, Math.round(enemy.maxHp * 0.16));
+  const baseReward = Math.max(1, Math.round(enemy.reward * 0.12));
+  for (let i = 0; i < childCount; i += 1) {
+    const angle = (Math.PI * 2 * i) / childCount + 0.35;
+    const offset = 9 + i * 2;
+    const child = makeEnemy(enemy.deathSpawnType, {
+      x: enemy.x + Math.cos(angle) * offset,
+      y: enemy.y + Math.sin(angle) * offset,
+      path: enemy.path,
+      targetIndex: enemy.targetIndex,
+      hp: baseHp,
+      maxHp: baseHp,
+      speed: enemy.speed * 1.22,
+      reward: baseReward,
+      radius: 9,
+      name: "Bone Spawn",
+      glyph: "s",
+      deathSpawnType: null,
+      deathSpawnCount: 0,
+      slowTime: 0,
+      slowSources: {},
+      burnTime: 0,
+      burnDps: 0,
+      bleedTime: 0,
+      bleedDps: 0,
+      vulnTime: 0,
+      vulnMult: 1,
+      stunTime: 0,
+    });
+    state.enemies.push(child);
+  }
+  state.effects.push({ x: enemy.x, y: enemy.y, r: 26, life: 0.24, color: "#d9d1bd" });
 }
 
 function applySlow(enemy, duration, sourceId = null) {
@@ -1215,6 +1486,16 @@ function applyBurn(enemy, dps, duration) {
   enemy.burnTime = Math.max(enemy.burnTime || 0, duration);
 }
 
+function applyBleed(enemy, dps, duration) {
+  enemy.bleedDps = Math.max(enemy.bleedDps || 0, dps);
+  enemy.bleedTime = Math.max(enemy.bleedTime || 0, duration);
+}
+
+function applyVulnerability(enemy, multiplier, duration) {
+  enemy.vulnMult = Math.max(enemy.vulnMult || 1, multiplier);
+  enemy.vulnTime = Math.max(enemy.vulnTime || 0, duration);
+}
+
 function resolveProjectileHit(projectile, target) {
   const impact = { x: target.x, y: target.y };
   const hitEnemies = projectile.splashRadius
@@ -1236,6 +1517,9 @@ function resolveProjectileHit(projectile, target) {
     }
     if (projectile.burnDps && state.enemies.includes(enemy)) {
       applyBurn(enemy, projectile.burnDps, projectile.burnDuration || 2);
+    }
+    if (projectile.bleedDps && state.enemies.includes(enemy)) {
+      applyBleed(enemy, projectile.bleedDps, projectile.bleedDuration || 3);
     }
   }
 
@@ -1267,6 +1551,12 @@ function updateEnemies(dt) {
       enemy.burnTime = Math.max(0, enemy.burnTime - dt);
       if (enemy.burnTime <= 0) enemy.burnDps = 0;
     }
+    if (enemy.bleedTime > 0) {
+      applyDamage(enemy, enemy.bleedDps * dt);
+      if (!state.enemies.includes(enemy)) continue;
+      enemy.bleedTime = Math.max(0, enemy.bleedTime - dt);
+      if (enemy.bleedTime <= 0) enemy.bleedDps = 0;
+    }
 
     const stunned = enemy.stunTime > 0;
     const auraSlowStacks = updateSlowSources(enemy, dt);
@@ -1276,6 +1566,8 @@ function updateEnemies(dt) {
     const slowMod = Math.min(auraSlowMod, projectileSlowMod);
     enemy.slowTime = Math.max(0, enemy.slowTime - dt);
     enemy.stunTime = Math.max(0, (enemy.stunTime || 0) - dt);
+    enemy.vulnTime = Math.max(0, (enemy.vulnTime || 0) - dt);
+    if (enemy.vulnTime <= 0) enemy.vulnMult = 1;
     if (stunned) continue;
     let move = enemy.speed * slowMod * dt;
 
@@ -1587,7 +1879,7 @@ function defenderPalette(stats, tower) {
 
 function enemyPalette(enemy) {
   const slowed = enemy.slowTime > 0 || Object.keys(enemy.slowSources || {}).length > 0;
-  const color = enemy.stunTime > 0 ? "#f4c95d" : slowed ? "#b8f5ff" : enemy.burnTime > 0 ? "#ff8b3d" : enemy.color;
+  const color = enemy.stunTime > 0 ? "#f4c95d" : slowed ? "#b8f5ff" : enemy.burnTime > 0 ? "#ff8b3d" : enemy.bleedTime > 0 ? "#ff6f8e" : enemy.vulnTime > 0 ? "#d9a441" : enemy.color;
   return {
     b: "#17120d",
     h: "#8f6f42",
@@ -1656,7 +1948,7 @@ function drawEnemyShape(enemy) {
     return;
   }
 
-  if (enemy.name === "Fallen Knight" || enemy.name === "Siege Lord") {
+  if (enemy.name === "Fallen Knight" || enemy.name === "Siege Lord" || enemy.name === "Bone Carrier") {
     drawPixelSprite(spritePatterns.knight, enemy.x, enemy.y - 2 + bob, enemy.boss ? 4 : 3, enemyPalette(enemy));
     return;
   }
@@ -1872,7 +2164,10 @@ function setGameSpeed(speed) {
 function tryUpgradeSelected() {
   if (!selectedTower) return;
   const cost = upgradeCost(selectedTower);
-  if (selectedTower.level >= 8 || (selectedTower.level >= 4 && !selectedTower.evolution) || state.credits < cost) return;
+  const evolution = selectedTower.evolution ? evolutions[selectedTower.type]?.[selectedTower.evolution] : null;
+  const needsEvolution = selectedTower.level >= 4 && !selectedTower.evolution;
+  const needsSpecialization = selectedTower.level >= 8 && evolution?.forks && !selectedTower.specialization;
+  if (selectedTower.level >= 12 || needsEvolution || needsSpecialization || state.credits < cost) return;
   state.credits -= cost;
   selectedTower.spent += cost;
   selectedTower.level += 1;
@@ -1893,9 +2188,23 @@ function tryEvolveSelected(evolutionKey) {
   updateHud();
 }
 
+function trySpecializeSelected(specializationKey) {
+  if (!selectedTower || selectedTower.level < 8 || !selectedTower.evolution || selectedTower.specialization) return;
+  const option = evolutions[selectedTower.type]?.[selectedTower.evolution]?.forks?.[specializationKey];
+  if (!option) return;
+  const cost = specializationCost(selectedTower);
+  if (state.credits < cost) return;
+  state.credits -= cost;
+  selectedTower.spent += cost;
+  selectedTower.specialization = specializationKey;
+  ui.banner.textContent = `${towerTypes[selectedTower.type].name} chose ${option.name} for ${cost}g.`;
+  updateHud();
+}
+
 function tryFinalFormSelected() {
-  if (!selectedTower || selectedTower.level < 8 || !selectedTower.evolution || selectedTower.finalForm) return;
-  const final = evolutions[selectedTower.type]?.[selectedTower.evolution]?.final;
+  if (!selectedTower || selectedTower.level < 12 || !selectedTower.evolution || selectedTower.finalForm) return;
+  const evolution = evolutions[selectedTower.type]?.[selectedTower.evolution];
+  const final = selectedTower.specialization ? evolution?.forks?.[selectedTower.specialization]?.final : evolution?.final;
   if (!final) return;
   const cost = finalFormCost(selectedTower);
   if (state.credits < cost) return;
@@ -1948,8 +2257,13 @@ ui.upgrade.addEventListener("click", () => {
 
 ui.evolutionButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    if (selectedTower?.level >= 8 && selectedTower.evolution && !selectedTower.finalForm) {
+    const evolution = selectedTower?.evolution ? evolutions[selectedTower.type]?.[selectedTower.evolution] : null;
+    if (selectedTower?.level >= 12 && selectedTower.evolution && !selectedTower.finalForm) {
       tryFinalFormSelected();
+      return;
+    }
+    if (selectedTower?.level >= 8 && evolution?.forks && !selectedTower.specialization) {
+      trySpecializeSelected(button.dataset.evolution);
       return;
     }
     tryEvolveSelected(button.dataset.evolution);
@@ -1986,14 +2300,22 @@ document.addEventListener("keydown", (event) => {
     sellSelected();
   } else if (key === "a") {
     event.preventDefault();
-    if (selectedTower?.level >= 8 && selectedTower.evolution && !selectedTower.finalForm) {
+    const evolution = selectedTower?.evolution ? evolutions[selectedTower.type]?.[selectedTower.evolution] : null;
+    if (selectedTower?.level >= 12 && selectedTower.evolution && !selectedTower.finalForm) {
       tryFinalFormSelected();
+    } else if (selectedTower?.level >= 8 && evolution?.forks && !selectedTower.specialization) {
+      trySpecializeSelected("a");
     } else {
       tryEvolveSelected("a");
     }
   } else if (key === "b") {
     event.preventDefault();
-    tryEvolveSelected("b");
+    const evolution = selectedTower?.evolution ? evolutions[selectedTower.type]?.[selectedTower.evolution] : null;
+    if (selectedTower?.level >= 8 && evolution?.forks && !selectedTower.specialization) {
+      trySpecializeSelected("b");
+    } else {
+      tryEvolveSelected("b");
+    }
   } else if (key === "f") {
     event.preventDefault();
     tryFinalFormSelected();

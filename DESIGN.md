@@ -29,17 +29,21 @@ Fantasy siege defense inspired by open-map Warcraft 3 tower defense mods. The pl
 | Catapult | Slow AOE, high damage | Punishes dense groups, especially around corners. |
 | Frost Wizard | Single-target projectile slow | Starts as precise control, then branches into longer slows or AOE slow splash. |
 
+Single-target towers should hit dramatically harder than same-level AOE towers because AOE earns value from enemy count. The rough target is about three times the per-target pressure of broad AOE at comparable investment.
+
 ## Enemy Types
 
 Skeletons are the baseline. Centaurs pressure weak coverage with speed. Fallen knights test single-target damage. Dragons are flying enemies that ignore the maze and move directly toward the keep. Ground boss waves arrive every 10 waves. Flying boss waves arrive every 25 waves and override the ground boss cadence when they overlap.
 
 ## Run Controls
 
-Difficulty increases enemy health and speed, and also scales kill and wave-clear gold upward so higher difficulties remain manageable. Reward multipliers are stepped by difficulty: 1.00x, 1.12x, 1.45x, 1.95x, and 2.55x. Difficulty locks when the first wave starts to prevent income exploits. Speed can be set to 1x, 2x, or 3x.
+Difficulty increases enemy health and speed without increasing gold income. Difficulty locks when the first wave starts to prevent mid-run tuning exploits. Speed can be set to 1x, 2x, or 3x.
 
 ## Wave Preview
 
-The game previews the next wave with a named pattern, short tactical note, tags, and enemy count. Patterns include Skeleton Swarm, Centaur Rush, Knight Push, Dragon Skies, Ground Boss, and Flying Boss.
+The game previews the next wave with a named pattern, short tactical note, tags, and enemy count. Patterns include Skeleton Swarm, Centaur Rush, Knight Push, Bone Carriers, Mixed Vanguard, Dragon Skies, Ground Boss, and Flying Boss.
+
+Enemy health scales with both wave count and a late-wave curve so level 12 towers have something meaningful to chew through. After wave 25, every wave uses a mixed army of baseline bodies, speedy centaurs, tanky knights, Bone Carriers, and occasional dragons; the named pattern decides which threat is emphasized rather than making the whole wave one body type. Bone Carriers are tanky ground enemies that drop a few low-reward Bone Spawns where they die, forcing the maze to handle cleanup pressure without becoming a gold farm.
 
 ## Keyboard Shortcuts
 
@@ -47,7 +51,7 @@ Number keys 1-8 select defenders. W starts the next wave. Space pauses or resume
 
 ## Later Tower Evolutions
 
-At level 4, defenders can pay gold to branch into specialized upgrades. The level 2 upgrade stays cheap, level 3 and 4 are modestly more expensive, and evolution costs about 30% more so branching is a meaningful commitment.
+At level 4, defenders can pay gold to branch into specialized upgrades. Some defenders gain a second fork at level 8, then a very expensive no-choice capstone at level 12 based on that level 8 fork. The level 2 upgrade stays cheap, level 3 and 4 are modestly more expensive, and evolution costs about 30% more so branching is a meaningful commitment.
 
 | Defender | Evolution A | Evolution B |
 | --- | --- | --- |
@@ -78,4 +82,4 @@ Race is selected before wave 1 and locks when the first wave starts. Each race h
 
 Human is the baseline balanced race with archers, guards, siege weapons, mages, dedicated anti-air, and the Frost Wizard's targeted projectile slow.
 
-Orc is the first alternate race: melee-heavy maze building, extra-cheap weak Grunts, lower range, and higher raw damage once its real towers are placed or evolved. Its Spear Thrower finds the best piercing line, War Drummer pulses a ground damage aura, Firepot burns over time, Wyvern Spear snares flying enemies, Crusher fires ranged splash stuns, and Hex Witch uses a stacking slow aura instead of a projectile.
+Orc is the first alternate race: melee-heavy maze building, extra-cheap weak Grunts, lower range, and higher raw damage once its real towers are placed or evolved. Its Spear Thrower finds the best piercing line and can later fork into speed, reach, flat damage, or bleed. War Drummer pulses a ground damage aura and can later fork into faster pulses, harder pulses, wider aura, or armor break. Firepot burns over time, Wyvern Spear snares flying enemies, Crusher fires ranged splash stuns, and Hex Witch uses a stacking slow aura instead of a projectile.
