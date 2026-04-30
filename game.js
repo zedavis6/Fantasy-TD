@@ -42,24 +42,25 @@ const humanTowerTypes = {
     name: "Archer",
     role: "Fast single low damage",
     glyph: "A",
-    cost: 35,
+    cost: 40,
     color: "#f4c95d",
     range: 132,
     fireRate: 0.32,
-    damage: 18,
+    damage: 31,
     projectileSpeed: 520,
   },
   guard: {
     name: "Shield Guard",
     role: "Cheap melee",
     glyph: "G",
-    cost: 20,
+    cost: 14,
     color: "#7da1d3",
     range: 48,
     fireRate: 0.55,
-    damage: 4,
+    damage: 8,
     projectileSpeed: 0,
     melee: true,
+    groundOnly: true,
   },
   rail: {
     name: "Ballista",
@@ -69,7 +70,7 @@ const humanTowerTypes = {
     color: "#c9c3ae",
     range: 158,
     fireRate: 1.18,
-    damage: 86,
+    damage: 145,
     projectileSpeed: 620,
   },
   sky: {
@@ -80,7 +81,7 @@ const humanTowerTypes = {
     color: "#b8f5ff",
     range: 196,
     fireRate: 0.82,
-    damage: 82,
+    damage: 136,
     projectileSpeed: 720,
     antiAirOnly: true,
   },
@@ -92,7 +93,7 @@ const humanTowerTypes = {
     color: "#ff6f8e",
     range: 118,
     fireRate: 0.68,
-    damage: 13,
+    damage: 22,
     projectileSpeed: 520,
     chain: true,
     chainRange: 82,
@@ -106,9 +107,11 @@ const humanTowerTypes = {
     color: "#ff8b3d",
     range: 116,
     fireRate: 0.42,
-    damage: 8,
+    damage: 9,
     projectileSpeed: 430,
     splashRadius: 48,
+    burnDps: 4,
+    burnDuration: 1.6,
   },
   mortar: {
     name: "Catapult",
@@ -118,7 +121,7 @@ const humanTowerTypes = {
     color: "#8f6f42",
     range: 182,
     fireRate: 1.65,
-    damage: 38,
+    damage: 42,
     projectileSpeed: 300,
     splashRadius: 72,
   },
@@ -130,10 +133,25 @@ const humanTowerTypes = {
     color: "#5bd7e8",
     range: 112,
     fireRate: 0.82,
-    damage: 4,
+    damage: 0,
     projectileSpeed: 360,
     slow: true,
-    slowDuration: 1.8,
+    slowDuration: 2.7,
+  },
+  bank: {
+    name: "Royal Bank",
+    role: "Economy tower",
+    glyph: "$",
+    cost: 110,
+    color: "#f0c14b",
+    range: 0,
+    fireRate: 999,
+    damage: 0,
+    projectileSpeed: 0,
+    bank: true,
+    bankBaseIncome: 12,
+    bankLevelIncome: 3,
+    bankCompound: 0.035,
   },
 };
 
@@ -145,7 +163,10 @@ const humanEvolutions = {
       fireRateMult: 0.55,
       damageMult: 0.9,
       glyph: "R",
-      final: { name: "Storm of Arrows", desc: "Blinding fire rate", fireRateMult: 0.42, damageMult: 1.22, glyph: "V" },
+      forks: {
+        a: { name: "Sniper", desc: "Slow massive single target, air and ground", fireRateMult: 1.85, damageMult: 3.1, rangeAdd: 80, glyph: "N", final: { name: "Deadeye", desc: "Extreme single target range and damage", damageMult: 1.75, rangeAdd: 70, bossDamageMult: 1.18, glyph: "D" } },
+        b: { name: "Long Volley", desc: "Long range rapid single target", fireRateMult: 0.58, damageMult: 1.15, rangeAdd: 66, glyph: "L", final: { name: "Arrow Engine", desc: "Relentless long-range single target", fireRateMult: 0.48, damageMult: 1.25, rangeAdd: 48, glyph: "E" } },
+      },
     },
     b: {
       name: "Split Shot",
@@ -153,7 +174,10 @@ const humanEvolutions = {
       multiShot: 2,
       damageMult: 0.78,
       glyph: "M",
-      final: { name: "Raincaller", desc: "Hits four targets", multiShot: 4, damageMult: 1.18, glyph: "N" },
+      forks: {
+        a: { name: "Fan Shot", desc: "More targets", multiShot: 4, damageMult: 0.9, glyph: "F", final: { name: "Raincaller", desc: "Hits many targets", multiShot: 6, damageMult: 1.1, glyph: "N" } },
+        b: { name: "Venom Twins", desc: "Still two targets, adds poison", multiShot: 2, bleedDps: 16, bleedDuration: 3.4, glyph: "V", final: { name: "Blackleaf", desc: "Two poisoned shots with heavy venom", bleedDpsMult: 2.1, bleedDurationAdd: 2.2, damageMult: 1.18, glyph: "B" } },
+      },
     },
   },
   guard: {
@@ -163,34 +187,48 @@ const humanEvolutions = {
       stunDuration: 0.32,
       damageMult: 1.2,
       glyph: "T",
-      final: { name: "Iron Bastion", desc: "Longer stun and wider reach", stunDurationAdd: 0.22, rangeAdd: 28, glyph: "I" },
+      forks: {
+        a: { name: "Repel Bash", desc: "Short-range stun and knockback", rangeAdd: -10, stunDurationAdd: 0.12, knockback: 22, glyph: "R", final: { name: "Gatebreaker", desc: "Hard close-range knockback", rangeAdd: -8, stunDurationAdd: 0.18, knockbackAdd: 18, damageMult: 1.25, glyph: "G" } },
+        b: { name: "Crowd Bash", desc: "Short-range multi-target stun", rangeAdd: -12, multiShot: 3, damageMult: 0.92, glyph: "C", final: { name: "Bastion Guard", desc: "Close multi-stun defense", rangeAdd: -8, multiShot: 5, stunDurationAdd: 0.14, glyph: "B" } },
+      },
     },
     b: {
       name: "Shield Sweep",
-      desc: "Sweeps several nearby enemies",
+      desc: "Placeholder tank path; sweeping damage for now",
       multiShot: 3,
       damageMult: 1.05,
       fireRateMult: 0.82,
       glyph: "D",
-      final: { name: "Duelist Captain", desc: "Fast sweeping strikes", fireRateMult: 0.58, multiShot: 4, damageMult: 1.25, glyph: "K" },
+      forks: {
+        a: { name: "Duelist", desc: "Single-target flat damage", multiShot: 1, damageMult: 2.35, fireRateMult: 0.78, glyph: "U", final: { name: "Duelist Captain", desc: "Heavy single-target guard damage", damageMult: 1.75, fireRateMult: 0.72, glyph: "K" } },
+        b: { name: "Sweeper", desc: "Improved sweep damage", multiShot: 4, damageMult: 1.35, glyph: "S", final: { name: "Shield Wall", desc: "Wide sweeping guard damage", multiShot: 6, damageMult: 1.22, glyph: "W" } },
+      },
     },
   },
   rail: {
     a: {
       name: "Siege Bolt",
-      desc: "Huge single hits",
+      desc: "Slow long-range single-target damage",
       damageMult: 1.85,
       fireRateMult: 1.12,
+      rangeAdd: 34,
       glyph: "S",
-      final: { name: "Titan Bolt", desc: "Boss-piercing damage", damageMult: 1.72, rangeAdd: 28, glyph: "T" },
+      forks: {
+        a: { name: "Wing Pin", desc: "Flying specialty with knockdown", airDamageMult: 1.75, stunDuration: 0.14, knockback: 34, glyph: "W", final: { name: "Dragon Pin", desc: "Brutal flying knockdown", airDamageMultAdd: 0.85, stunDurationAdd: 0.12, knockbackAdd: 24, damageMult: 1.18, glyph: "D" } },
+        b: { name: "Boss Bolt", desc: "Boss damage specialty", bossDamageMult: 1.8, glyph: "O", final: { name: "Titan Bolt", desc: "Boss-piercing damage", bossDamageMultAdd: 1.2, damageMult: 1.35, rangeAdd: 28, glyph: "T" } },
+      },
     },
     b: {
-      name: "Longbow Frame",
-      desc: "Longer range and faster reload",
-      rangeAdd: 70,
-      fireRateMult: 0.72,
-      glyph: "L",
-      final: { name: "Map Reaper", desc: "Extreme range and reload", rangeAdd: 88, fireRateMult: 0.72, glyph: "R" },
+      name: "Repeater Frame",
+      desc: "Fast short-range ballista",
+      rangeAdd: -42,
+      fireRateMult: 0.45,
+      damageMult: 0.7,
+      glyph: "R",
+      forks: {
+        a: { name: "Sky Repeater", desc: "Fast shots deal extra damage to air", airDamageMult: 1.75, glyph: "A", final: { name: "Sky Battery", desc: "Extreme anti-air repeater", airDamageMultAdd: 0.9, fireRateMult: 0.74, glyph: "Y" } },
+        b: { name: "Focus Crank", desc: "Repeated shots scale on one target", repeatDamageAdd: 0.18, repeatDamageMax: 8, glyph: "F", final: { name: "Boss Crank", desc: "Repeated shots scale harder", repeatDamageAddAdd: 0.12, repeatDamageMaxAdd: 6, glyph: "C" } },
+      },
     },
   },
   sky: {
@@ -200,7 +238,10 @@ const humanEvolutions = {
       damageMult: 1.8,
       fireRateMult: 1.08,
       glyph: "P",
-      final: { name: "Wyrmslayer", desc: "Devastates flying bosses", damageMult: 1.9, glyph: "Y" },
+      forks: {
+        a: { name: "Wing Execute", desc: "Executes air below 10% HP", executeAirThreshold: 0.1, glyph: "E", final: { name: "Wyrmslayer", desc: "Executes air below 18% HP", executeAirThresholdAdd: 0.08, damageMult: 1.35, glyph: "Y" } },
+        b: { name: "Snare Bolts", desc: "Slows air", slow: true, slowDuration: 2.2, glyph: "S", final: { name: "Sky Chains", desc: "Longer air slows", slowDurationAdd: 3.2, fireRateMult: 0.82, glyph: "C" } },
+      },
     },
     b: {
       name: "Skyburst Crew",
@@ -209,7 +250,10 @@ const humanEvolutions = {
       damageMult: 0.76,
       fireRateMult: 1.12,
       glyph: "E",
-      final: { name: "Starfall Battery", desc: "Huge anti-air explosions", splashRadiusAdd: 54, damageMult: 1.35, glyph: "Q" },
+      forks: {
+        a: { name: "Frost Burst", desc: "Low damage splash slow", damageMult: 0.55, slow: true, slowDuration: 1.7, glyph: "F", final: { name: "Starfall Frost", desc: "Wider slowing skybursts", splashRadiusAdd: 44, slowDurationAdd: 2.4, glyph: "R" } },
+        b: { name: "Ground Slash", desc: "Splash also hits ground, but targets air", splashHitsGround: true, damageMult: 1.08, glyph: "G", final: { name: "Starfall Battery", desc: "Huge mixed splash from air targets", splashRadiusAdd: 54, damageMult: 1.35, glyph: "Q" } },
+      },
     },
   },
   chain: {
@@ -218,8 +262,12 @@ const humanEvolutions = {
       desc: "More chain jumps",
       chainCountAdd: 3,
       chainRangeAdd: 30,
+      damageMult: 1.18,
       glyph: "F",
-      final: { name: "Storm Web", desc: "Chains through whole packs", chainCountAdd: 5, chainRangeAdd: 45, glyph: "W" },
+      forks: {
+        a: { name: "Storm Web", desc: "Even more jumps", chainCountAdd: 6, chainRangeAdd: 40, damageMult: 1.12, glyph: "W", final: { name: "World Web", desc: "Chains through whole packs", chainCountAdd: 8, chainRangeAdd: 50, damageMult: 1.18, glyph: "O" } },
+        b: { name: "Static Chain", desc: "Brief stun on chain hits", stunDuration: 0.1, damageMult: 1.1, glyph: "S", final: { name: "Lightning Net", desc: "Longer chain stuns", stunDurationAdd: 0.12, chainCountAdd: 3, damageMult: 1.16, glyph: "N" } },
+      },
     },
     b: {
       name: "Thunder Strike",
@@ -228,7 +276,10 @@ const humanEvolutions = {
       damageMult: 1.45,
       chainCountAdd: -1,
       glyph: "T",
-      final: { name: "Sky Hammer", desc: "Crushing lightning blasts", splashRadiusAdd: 34, damageMult: 1.5, glyph: "H" },
+      forks: {
+        a: { name: "Storm Burst", desc: "Bigger AOE lightning", splashRadiusAdd: 36, damageMult: 1.08, glyph: "B", final: { name: "Sky Hammer", desc: "Crushing lightning blasts", splashRadiusAdd: 44, damageMult: 1.5, glyph: "H" } },
+        b: { name: "Thunderclap", desc: "Brief stun in the blast", stunDuration: 0.12, glyph: "C", final: { name: "Storm Hammer", desc: "Stronger stunning blasts", stunDurationAdd: 0.12, damageMult: 1.28, glyph: "M" } },
+      },
     },
   },
   flak: {
@@ -239,7 +290,10 @@ const humanEvolutions = {
       rangeAdd: -18,
       splashRadiusAdd: 16,
       glyph: "C",
-      final: { name: "Dragon Breath", desc: "Close-range firestorm", fireRateMult: 0.58, splashRadiusAdd: 28, glyph: "B" },
+      forks: {
+        a: { name: "Heat Aura", desc: "Becomes close aura damage", auraDamage: true, projectileSpeed: 0, rangeAdd: -18, fireRateMult: 0.82, glyph: "A", final: { name: "Dragon Breath", desc: "Dense close fire aura", fireRateMult: 0.58, rangeAdd: 18, damageMult: 1.3, glyph: "B" } },
+        b: { name: "Cinder Cone", desc: "Adds frequent burn DOT", fireRateMult: 0.82, burnDps: 18, burnDuration: 3.4, glyph: "D", final: { name: "Ash Cone", desc: "Hotter, longer cone burns", burnDpsMult: 1.9, burnDurationAdd: 2.2, fireRateMult: 0.86, glyph: "H" } },
+      },
     },
     b: {
       name: "Fire Orb",
@@ -249,7 +303,10 @@ const humanEvolutions = {
       fireRateMult: 1.18,
       damageMult: 1.25,
       glyph: "O",
-      final: { name: "Sun Orb", desc: "Huge ranged explosions", rangeAdd: 45, splashRadiusAdd: 42, damageMult: 1.35, glyph: "U" },
+      forks: {
+        a: { name: "Sun Orb", desc: "Bigger splash", splashRadiusAdd: 46, glyph: "S", final: { name: "Solar Orb", desc: "Huge ranged explosions", rangeAdd: 45, splashRadiusAdd: 56, damageMult: 1.25, glyph: "U" } },
+        b: { name: "Pitch Orb", desc: "Adds frequent burn DOT", fireRateMult: 0.86, burnDps: 22, burnDuration: 4.1, glyph: "P", final: { name: "Meteor Orb", desc: "Long burning explosions", burnDpsMult: 1.8, burnDurationAdd: 2.5, fireRateMult: 0.88, damageMult: 1.18, glyph: "M" } },
+      },
     },
   },
   mortar: {
@@ -260,7 +317,10 @@ const humanEvolutions = {
       splashRadiusAdd: 34,
       fireRateMult: 1.15,
       glyph: "E",
-      final: { name: "Worldsplitter", desc: "Massive siege blast", damageMult: 1.6, splashRadiusAdd: 48, glyph: "W" },
+      forks: {
+        a: { name: "Mudbreaker", desc: "Adds slow", slow: true, slowDuration: 1.8, glyph: "M", final: { name: "Worldmire", desc: "Bigger slowing siege blasts", slowDurationAdd: 2.8, splashRadiusAdd: 30, glyph: "I" } },
+        b: { name: "Worldsplitter", desc: "Adds damage", damageMult: 1.55, glyph: "W", final: { name: "Core Splitter", desc: "Massive siege damage", damageMult: 1.6, splashRadiusAdd: 30, glyph: "C" } },
+      },
     },
     b: {
       name: "Scatter Stones",
@@ -269,33 +329,34 @@ const humanEvolutions = {
       damageMult: 0.72,
       splashRadiusAdd: 12,
       glyph: "S",
-      final: { name: "Hail Battery", desc: "Relentless bombardment", fireRateMult: 0.54, multiShot: 2, glyph: "B" },
+      forks: {
+        a: { name: "Hail Battery", desc: "Adds range", rangeAdd: 64, glyph: "H", final: { name: "Distant Hail", desc: "Long-range bombardment", rangeAdd: 86, fireRateMult: 0.82, glyph: "D" } },
+        b: { name: "Quarry Storm", desc: "Increases splash radius", splashRadiusAdd: 44, glyph: "Q", final: { name: "Stone Rain", desc: "Huge fast splash radius", splashRadiusAdd: 64, multiShot: 2, glyph: "R" } },
+      },
     },
   },
   frost: {
     a: {
       name: "Deep Chill",
       desc: "Much longer single-target slow",
-      slowDurationAdd: 1.8,
+      slowDurationAdd: 4.2,
       rangeAdd: 18,
       glyph: "D",
       forks: {
         a: {
-          name: "Permafrost",
-          desc: "Even longer single-target control",
-          slowDurationAdd: 1.4,
-          rangeAdd: 18,
-          glyph: "P",
-          final: { name: "Winter Prison", desc: "Extreme long-duration slow", slowDurationAdd: 2.6, rangeAdd: 34, glyph: "P" },
+          name: "Creeping Cold",
+          desc: "Slow spreads to two fresh targets",
+          slowSpreadCount: 2,
+          slowSpreadRange: 78,
+          glyph: "C",
+          final: { name: "Winter Plague", desc: "Slow spreads farther", slowSpreadRangeAdd: 36, slowSpreadCountAdd: 1, slowDurationAdd: 3.2, glyph: "P" },
         },
         b: {
-          name: "Snap Freeze",
-          desc: "Short stun on chilled targets",
-          stun: true,
-          stunDuration: 0.16,
-          fireRateMult: 0.9,
-          glyph: "S",
-          final: { name: "Crystal Lock", desc: "Harder control bursts", stunDurationAdd: 0.16, damageMult: 1.6, glyph: "L" },
+          name: "Far Winter",
+          desc: "Increased range",
+          rangeAdd: 58,
+          glyph: "R",
+          final: { name: "Winter Prison", desc: "Extreme range and long slow", rangeAdd: 72, slowDurationAdd: 5.0, glyph: "P" },
         },
       },
     },
@@ -308,23 +369,18 @@ const humanEvolutions = {
       glyph: "I",
       forks: {
         a: {
-          name: "Hail Needles",
-          desc: "Faster, smaller splash, shorter slow",
-          fireRateMult: 0.58,
-          splashRadiusAdd: -18,
-          slowDurationAdd: -0.65,
-          damageMult: 1.18,
-          glyph: "H",
-          final: { name: "Needle Storm", desc: "Relentless fast ice bursts", fireRateMult: 0.52, damageMult: 1.35, glyph: "N" },
+          name: "Deep Freeze",
+          desc: "Longer slow",
+          slowDurationAdd: 3.2,
+          glyph: "D",
+          final: { name: "Frozen Garden", desc: "Huge slow blooms", slowDurationAdd: 4.8, splashRadiusAdd: 32, glyph: "F" },
         },
         b: {
-          name: "Glacier Bloom",
-          desc: "Slower, larger splash, longer slow",
-          fireRateMult: 1.22,
-          splashRadiusAdd: 34,
-          slowDurationAdd: 0.95,
-          glyph: "G",
-          final: { name: "Frozen Garden", desc: "Huge slow blooms", splashRadiusAdd: 46, slowDurationAdd: 1.2, damageMult: 1.25, glyph: "F" },
+          name: "True Cold",
+          desc: "Can slow resistant enemies slightly",
+          coldPierce: 0.18,
+          glyph: "T",
+          final: { name: "Absolute Zero", desc: "Strongly pierces slow resistance", coldPierceAdd: 0.42, slowDurationAdd: 3.2, glyph: "Z" },
         },
       },
     },
@@ -387,7 +443,7 @@ const orcTowerTypes = {
     projectileSpeed: 700,
     antiAirOnly: true,
     slow: true,
-    slowDuration: 1.1,
+    slowDuration: 1.7,
   },
   drummer: {
     name: "War Drummer",
@@ -447,15 +503,36 @@ const orcTowerTypes = {
     projectileSpeed: 0,
     auraSlow: true,
     slow: true,
-    slowDuration: 0.95,
+    slowDuration: 1.45,
     groundOnly: true,
   },
 };
 
 const orcEvolutions = {
   grunt: {
-    a: { name: "Frenzy Stab", desc: "Explodes into rapid single-target damage", fireRateMult: 0.36, damageMult: 4.2, glyph: "F", final: { name: "Blood Stabber", desc: "Extreme rapid single damage", fireRateMult: 0.58, damageMult: 1.45, glyph: "B" } },
-    b: { name: "Axe Cleave", desc: "Becomes a real cleaving damage unit", multiShot: 3, damageMult: 3.1, fireRateMult: 0.92, glyph: "A", final: { name: "Axe Mob", desc: "Wide cleaving melee", multiShot: 5, damageMult: 1.25, glyph: "M" } },
+    a: {
+      name: "Frenzy Stab",
+      desc: "Explodes into rapid single-target damage",
+      fireRateMult: 0.36,
+      damageMult: 4.2,
+      glyph: "F",
+      forks: {
+        a: { name: "Boss Gouger", desc: "Boss killer damage multiplier", bossDamageMult: 2.1, glyph: "G", final: { name: "Boss Eater", desc: "Extreme boss stabbing", bossDamageMultAdd: 1.35, damageMult: 1.28, glyph: "E" } },
+        b: { name: "Wound Hex", desc: "Reduces healing by 60%", antiHealMult: 0.4, antiHealDuration: 2.6, glyph: "W", final: { name: "Rot Stabber", desc: "Longer anti-heal wounds", antiHealDurationAdd: 2.2, damageMult: 1.2, glyph: "R" } },
+      },
+    },
+    b: {
+      name: "Axe Cleave",
+      desc: "Becomes a real cleaving damage unit",
+      multiShot: 3,
+      damageMult: 3.1,
+      fireRateMult: 0.92,
+      glyph: "A",
+      forks: {
+        a: { name: "Blood Cleave", desc: "Cleave bleeds", bleedDps: 14, bleedDuration: 3, glyph: "B", final: { name: "Blood Mob", desc: "Heavier cleaving bleed", bleedDpsMult: 1.9, bleedDurationAdd: 1.8, multiShot: 5, glyph: "M" } },
+        b: { name: "Shove Cleave", desc: "Cleave knocks back", knockback: 18, glyph: "S", final: { name: "Axe Mob", desc: "Wide cleaving knockback", knockbackAdd: 14, multiShot: 5, damageMult: 1.18, glyph: "X" } },
+      },
+    },
   },
   spear: {
     a: {
@@ -484,12 +561,53 @@ const orcEvolutions = {
     },
   },
   berserker: {
-    a: { name: "Blood Frenzy", desc: "Rapid strikes across nearby enemies", fireRateMult: 0.5, damageMult: 1.08, multiShot: 2, glyph: "F", final: { name: "Red Rage", desc: "Relentless multi-target melee", fireRateMult: 0.58, multiShot: 4, glyph: "R" } },
-    b: { name: "Skull Cleaver", desc: "Heavy cleaving hits", damageMult: 1.55, fireRateMult: 1.18, multiShot: 2, glyph: "K", final: { name: "Boss Butcher", desc: "Huge cleaving burst", damageMult: 1.45, multiShot: 3, glyph: "U" } },
+    a: {
+      name: "Blood Frenzy",
+      desc: "Rapid strikes across nearby enemies",
+      fireRateMult: 0.5,
+      damageMult: 1.08,
+      multiShot: 2,
+      glyph: "F",
+      forks: {
+        a: { name: "Long Frenzy", desc: "Increased melee reach", rangeAdd: 28, glyph: "L", final: { name: "Red Reach", desc: "Relentless long melee pressure", rangeAdd: 34, fireRateMult: 0.62, multiShot: 3, glyph: "R" } },
+        b: { name: "Blade Storm", desc: "Overlapping bladestorms multiply damage", bladeStormMult: 0.22, glyph: "S", final: { name: "Red Storm", desc: "Stronger overlap scaling", bladeStormMultAdd: 0.18, fireRateMult: 0.68, glyph: "D" } },
+      },
+    },
+    b: {
+      name: "Skull Cleaver",
+      desc: "Heavy cleaving hits",
+      damageMult: 1.55,
+      fireRateMult: 1.18,
+      multiShot: 2,
+      glyph: "K",
+      forks: {
+        a: { name: "Wide Cleaver", desc: "Bigger hit cap", multiShot: 4, rangeAdd: 16, glyph: "W", final: { name: "Cleaver Mob", desc: "Huge hit cap and reach", multiShot: 6, rangeAdd: 18, glyph: "M" } },
+        b: { name: "Skull Splitter", desc: "Slower but massive cleave", fireRateMult: 1.48, damageMult: 2.05, glyph: "S", final: { name: "Boss Butcher", desc: "Huge slow cleaving burst", damageMult: 1.8, multiShot: 3, glyph: "U" } },
+      },
+    },
   },
   wyvern: {
-    a: { name: "Dragon Skewer", desc: "Extreme anti-air damage", damageMult: 1.8, glyph: "S", final: { name: "Sky Killer", desc: "Flying boss execution", damageMult: 1.9, glyph: "K" } },
-    b: { name: "Net Spears", desc: "AOE anti-air blasts", splashRadiusAdd: 58, damageMult: 0.78, glyph: "N", final: { name: "Net Storm", desc: "Huge anti-air splash", splashRadiusAdd: 58, damageMult: 1.35, glyph: "M" } },
+    a: {
+      name: "Dragon Skewer",
+      desc: "Extreme anti-air damage",
+      damageMult: 1.8,
+      glyph: "S",
+      forks: {
+        a: { name: "Sky Killer", desc: "Air boss damage multiplier", bossDamageMult: 1.85, glyph: "K", final: { name: "Wyrm Bane", desc: "Extreme flying boss execution", bossDamageMultAdd: 1.15, damageMult: 1.35, glyph: "B" } },
+        b: { name: "Sniper Spear", desc: "Long-range anti-air sniper", rangeAdd: 84, fireRateMult: 1.08, glyph: "R", final: { name: "Cloud Harpoon", desc: "Extreme anti-air range", rangeAdd: 96, damageMult: 1.25, glyph: "H" } },
+      },
+    },
+    b: {
+      name: "Net Spears",
+      desc: "AOE anti-air blasts",
+      splashRadiusAdd: 58,
+      damageMult: 0.78,
+      glyph: "N",
+      forks: {
+        a: { name: "Wide Net", desc: "Bigger anti-air splash", splashRadiusAdd: 52, glyph: "W", final: { name: "Net Storm", desc: "Huge anti-air splash", splashRadiusAdd: 68, damageMult: 1.25, glyph: "M" } },
+        b: { name: "Snap Net", desc: "Rapid fire, decreased range", fireRateMult: 0.54, rangeAdd: -28, glyph: "P", final: { name: "Needle Net", desc: "Very rapid short anti-air bursts", fireRateMult: 0.56, damageMult: 1.18, glyph: "D" } },
+      },
+    },
   },
   drummer: {
     a: {
@@ -516,16 +634,82 @@ const orcEvolutions = {
     },
   },
   firepot: {
-    a: { name: "Oil Fire", desc: "Wider, longer burns", splashRadiusAdd: 30, burnDurationAdd: 1.2, glyph: "O", final: { name: "Burn Pit", desc: "Huge lingering burn", splashRadiusAdd: 46, burnDurationAdd: 1.4, fireRateMult: 0.84, glyph: "P" } },
-    b: { name: "Pitch Toss", desc: "Longer range, hotter burns", rangeAdd: 52, fireRateMult: 1.12, burnDpsMult: 1.35, glyph: "T", final: { name: "Meteor Pot", desc: "Long-range burning bombs", rangeAdd: 54, splashRadiusAdd: 30, burnDpsMult: 1.25, glyph: "M" } },
+    a: {
+      name: "Oil Fire",
+      desc: "Wider, longer burns",
+      splashRadiusAdd: 30,
+      burnDurationAdd: 1.2,
+      glyph: "O",
+      forks: {
+        a: { name: "Oil Cone", desc: "More range and wider cone", rangeAdd: 44, splashRadiusAdd: 24, glyph: "C", final: { name: "Burn Pit", desc: "Huge ranged fire spread", rangeAdd: 46, splashRadiusAdd: 42, glyph: "P" } },
+        b: { name: "Long Oil", desc: "Even longer burns", burnDurationAdd: 2.4, glyph: "L", final: { name: "Tar Fire", desc: "Extreme burn duration", burnDurationAdd: 3.2, burnDpsMult: 1.25, glyph: "T" } },
+      },
+    },
+    b: {
+      name: "Pitch Toss",
+      desc: "Longer range, hotter burns",
+      rangeAdd: 52,
+      fireRateMult: 1.12,
+      burnDpsMult: 1.35,
+      glyph: "T",
+      forks: {
+        a: { name: "Hot Shards", desc: "Small splash, faster throws", splashRadiusAdd: -24, fireRateMult: 0.62, damageMult: 1.18, glyph: "S", final: { name: "Shard Rain", desc: "Rapid small burning blasts", fireRateMult: 0.58, burnDpsMult: 1.25, glyph: "R" } },
+        b: { name: "Fire Tiles", desc: "Lights tiles on fire", tileBurnDuration: 3.4, tileBurnDps: 18, tileBurnRadius: 36, glyph: "F", final: { name: "Scorched Ground", desc: "Longer, hotter fire tiles", tileBurnDurationAdd: 2.4, tileBurnDpsMult: 1.7, tileBurnRadiusAdd: 12, glyph: "G" } },
+      },
+    },
   },
   crusher: {
-    a: { name: "War Maul", desc: "Bigger splash and damage", damageMult: 1.35, splashRadiusAdd: 28, glyph: "M", final: { name: "Mountain Breaker", desc: "Massive splash damage", damageMult: 1.3, splashRadiusAdd: 34, glyph: "B" } },
-    b: { name: "Stone Volley", desc: "Faster smaller stun shots", fireRateMult: 0.68, damageMult: 0.78, splashRadiusAdd: -16, glyph: "V", final: { name: "Quake Battery", desc: "Relentless ranged stuns", fireRateMult: 0.68, damageMult: 1.12, glyph: "Q" } },
+    a: {
+      name: "War Maul",
+      desc: "Melee splash crusher",
+      shockwave: true,
+      projectileSpeed: 0,
+      rangeAdd: -82,
+      damageMult: 1.45,
+      splashRadiusAdd: 20,
+      glyph: "M",
+      forks: {
+        a: { name: "Mountain Maul", desc: "Bigger splash and bigger hits", damageMult: 1.5, splashRadiusAdd: 30, glyph: "B", final: { name: "Mountain Breaker", desc: "Massive melee splash", damageMult: 1.45, splashRadiusAdd: 38, glyph: "K" } },
+        b: { name: "War Battery", desc: "Rapid melee splashes", fireRateMult: 0.56, damageMult: 0.9, glyph: "R", final: { name: "Maul Storm", desc: "Very rapid close splashes", fireRateMult: 0.58, damageMult: 1.18, glyph: "S" } },
+      },
+    },
+    b: {
+      name: "Stone Volley",
+      desc: "Short-range stun shots",
+      fireRateMult: 0.68,
+      damageMult: 0.78,
+      splashRadiusAdd: -16,
+      rangeAdd: -52,
+      glyph: "V",
+      forks: {
+        a: { name: "Boss Quake", desc: "Slower shots, longer stuns, prioritizes bosses", fireRateMult: 1.45, stunDurationAdd: 0.28, bossPriority: true, bossDamageMult: 1.4, glyph: "Q", final: { name: "Boss Shaker", desc: "Long boss-locking stuns", stunDurationAdd: 0.3, bossDamageMultAdd: 0.9, glyph: "S" } },
+        b: { name: "Pebble Volley", desc: "Small splash, max 4 enemies", splashRadiusAdd: -20, maxSplashTargets: 4, fireRateMult: 0.74, glyph: "P", final: { name: "Quake Battery", desc: "Relentless limited stuns", fireRateMult: 0.68, damageMult: 1.12, glyph: "Y" } },
+      },
+    },
   },
   hexer: {
-    a: { name: "Deep Hex", desc: "Longer slow", slowDurationAdd: 1.35, rangeAdd: 20, glyph: "D", final: { name: "Doom Hex", desc: "Huge slow field", slowDurationAdd: 1.65, rangeAdd: 38, glyph: "X" } },
-    b: { name: "Pain Hex", desc: "Adds damage to the slow field", damageAdd: 12, fireRateMult: 0.85, glyph: "P", final: { name: "Soul Hex", desc: "Heavy magic damage", damageAdd: 18, fireRateMult: 0.76, glyph: "S" } },
+    a: {
+      name: "Deep Hex",
+      desc: "Longer slow",
+      slowDurationAdd: 2.8,
+      rangeAdd: 20,
+      glyph: "D",
+      forks: {
+        a: { name: "Wide Hex", desc: "Wider area, no more slow", rangeAdd: 48, glyph: "W", final: { name: "Doom Field", desc: "Huge hex area", rangeAdd: 64, glyph: "D" } },
+        b: { name: "Snap Freeze", desc: "Less ticks, brief stun, persistent slow", fireRateMult: 1.55, stunDuration: 0.12, slowDurationAdd: 3.2, glyph: "F", final: { name: "Snap Prison", desc: "Persistent slow with sharper stuns", stunDurationAdd: 0.12, slowDurationAdd: 2.8, glyph: "P" } },
+      },
+    },
+    b: {
+      name: "Pain Hex",
+      desc: "Adds damage to the slow field",
+      damageAdd: 12,
+      fireRateMult: 0.85,
+      glyph: "P",
+      forks: {
+        a: { name: "Sky Hex", desc: "Damages air as well", groundOnly: false, damageAdd: 10, glyph: "A", final: { name: "Soul Hex", desc: "Heavy air and ground magic damage", damageAdd: 20, fireRateMult: 0.76, glyph: "S" } },
+        b: { name: "Still Hex", desc: "Cancels enemy speed auras", cancelSpeedAuraDuration: 1.8, glyph: "C", final: { name: "Silence Hex", desc: "Long speed-aura suppression", cancelSpeedAuraDurationAdd: 2.2, rangeAdd: 24, glyph: "I" } },
+      },
+    },
   },
 };
 
@@ -535,7 +719,7 @@ const races = {
     description: "Balanced defenders with siege, mages, and anti-air.",
     towers: humanTowerTypes,
     evolutions: humanEvolutions,
-    order: ["dart", "guard", "rail", "sky", "chain", "flak", "mortar", "frost"],
+    order: ["dart", "guard", "rail", "sky", "chain", "flak", "mortar", "frost", "bank"],
   },
   orc: {
     name: "Orc",
@@ -563,6 +747,7 @@ let gameSpeed = 1;
 let animTime = 0;
 let difficultyLocked = false;
 let nextTowerId = 1;
+let nextEnemyId = 1;
 
 const state = {
   lives: 20,
@@ -576,6 +761,7 @@ const state = {
   enemies: [],
   projectiles: [],
   effects: [],
+  fireTiles: [],
   difficulty: 3,
 };
 
@@ -733,6 +919,13 @@ function canPlace(tile) {
   return findPath(tile).length > 0;
 }
 
+function bankIncome(tower) {
+  const stats = towerStats(tower);
+  const waveAge = Math.max(0, state.wave - (tower.builtWave || 1));
+  const flatIncome = (stats.bankBaseIncome || 0) + tower.level * (stats.bankLevelIncome || 0);
+  return Math.round(flatIncome * (1 + waveAge * (stats.bankCompound || 0)));
+}
+
 function enemyProgress(enemy) {
   return enemy.targetIndex * 1000 - dist(enemy, enemy.path[enemy.targetIndex] || tileCenter(keepTile));
 }
@@ -775,24 +968,33 @@ function lateWaveMix(wave, focus = "balanced", leaders = []) {
     knight: 3 + Math.floor(wave / 7),
     splitter: 2 + Math.floor(wave / 10),
     dragon: wave % 3 === 0 ? 1 + Math.floor(wave / 30) : 0,
+    healer: wave >= 25 ? 1 + Math.floor((wave - 25) / 18) : 0,
+    frostWight: wave >= 35 ? 2 + Math.floor((wave - 35) / 10) : 0,
+    speedBanner: wave >= 45 ? 1 + Math.floor((wave - 45) / 22) : 0,
   };
 
   if (focus === "fast") {
     counts.centaur += 5 + Math.floor(wave / 9);
+    counts.speedBanner += wave >= 45 ? 1 : 0;
     counts.skeleton = Math.max(10, counts.skeleton - 5);
   } else if (focus === "armor") {
     counts.knight += 4 + Math.floor(wave / 10);
+    counts.healer += wave >= 25 ? 1 : 0;
     counts.centaur += 2;
   } else if (focus === "split") {
     counts.splitter += 3 + Math.floor(wave / 12);
+    counts.frostWight += wave >= 35 ? 1 : 0;
     counts.centaur += 2;
   } else if (focus === "air") {
     counts.dragon += 2 + Math.floor(wave / 18);
+    counts.speedBanner += wave >= 45 ? 1 : 0;
     counts.centaur += 2;
     counts.skeleton = Math.max(8, counts.skeleton - 8);
   } else if (focus === "boss") {
     counts.knight += 2 + Math.floor(wave / 12);
     counts.splitter += 1 + Math.floor(wave / 18);
+    counts.healer += wave >= 25 ? 1 : 0;
+    counts.frostWight += wave >= 35 ? 1 : 0;
     counts.skeleton = Math.max(8, counts.skeleton - 10);
   }
 
@@ -804,30 +1006,54 @@ function lateWaveMix(wave, focus = "balanced", leaders = []) {
       ...repeatType("knight", counts.knight),
       ...repeatType("splitter", counts.splitter),
       ...repeatType("dragon", counts.dragon),
+      ...repeatType("healer", counts.healer),
+      ...repeatType("frostWight", counts.frostWight),
+      ...repeatType("speedBanner", counts.speedBanner),
     ],
     wave + leaders.length * 19,
   );
 }
 
+function bossVariantTypes(wave) {
+  const variants = ["splitBoss", "frostBoss", "healerBoss", "speedBoss"];
+  if (wave < 50) return ["groundBoss"];
+  if (wave < 100) return [variants[Math.floor(wave / 10) % variants.length]];
+  const count = 2 + Math.min(3, Math.floor((wave - 100) / 50));
+  return Array.from({ length: count }, (_, index) => variants[(Math.floor(wave / 10) + index) % variants.length]);
+}
+
 function wavePlan(wave) {
   if (wave % 25 === 0) {
     const extra = Math.floor(wave / 25) * 2;
+    const variantBosses = wave >= 50 ? bossVariantTypes(wave) : [];
     return {
-      name: "Flying Boss",
-      details: "An Elder Dragon ignores the maze. Sky Hunters matter.",
-      tags: wave > 25 ? ["flying boss", "mixed", "anti-air", "cleanup"] : ["flying boss", "anti-air", "high damage"],
-      queue: wave > 25 ? lateWaveMix(wave, "air", ["flyingBoss", ...repeatType("dragon", extra)]) : ["flyingBoss", ...repeatType("dragon", extra)],
+      name: wave >= 100 ? "Elder Dragon Pack" : wave >= 50 ? "Elder Dragon Variant" : "Flying Boss",
+      details: wave >= 100
+        ? "The Elder Dragon brings multiple boss variants below it."
+        : wave >= 50
+          ? "The Elder Dragon brings a boss variant through the maze."
+          : "An Elder Dragon ignores the maze. Sky Hunters matter.",
+      tags: wave >= 50 ? ["flying boss", "boss variants", "mixed", "anti-air"] : wave > 25 ? ["flying boss", "mixed", "anti-air", "cleanup"] : ["flying boss", "anti-air", "high damage"],
+      queue: wave > 25 ? lateWaveMix(wave, "air", ["flyingBoss", ...variantBosses, ...repeatType("dragon", extra)]) : ["flyingBoss", ...repeatType("dragon", extra)],
       spawnGap: wave > 25 ? Math.max(0.34, 0.8 - wave * 0.009) : Math.max(0.7, 1.15 - wave * 0.014),
     };
   }
 
   if (wave % 10 === 0) {
     const guards = Math.floor(wave / 10) * 2;
+    const bosses = bossVariantTypes(wave);
+    const variantBossWave = wave >= 50;
     return {
-      name: "Ground Boss",
-      details: wave > 25 ? "A Siege Lord advances inside a mixed army." : "A Siege Lord follows the maze with knight support.",
-      tags: wave > 25 ? ["ground boss", "mixed", "armor", "cleanup"] : ["ground boss", "armor", "single-target"],
-      queue: wave > 25 ? lateWaveMix(wave, "boss", ["groundBoss", ...repeatType("knight", guards)]) : ["groundBoss", ...repeatType("knight", guards)],
+      name: variantBossWave ? (wave >= 100 ? "Variant Boss Pack" : "Variant Boss") : "Ground Boss",
+      details: variantBossWave
+        ? wave >= 100
+          ? "Multiple boss variants combine support effects inside the lane."
+          : "A boss version of a support enemy leads the wave."
+        : wave > 25
+          ? "A Siege Lord advances inside a mixed army."
+          : "A Siege Lord follows the maze with knight support.",
+      tags: variantBossWave ? ["boss variants", "mixed", "support"] : wave > 25 ? ["ground boss", "mixed", "armor", "cleanup"] : ["ground boss", "armor", "single-target"],
+      queue: wave > 25 ? lateWaveMix(wave, "boss", [...bosses, ...repeatType("knight", guards)]) : ["groundBoss", ...repeatType("knight", guards)],
       spawnGap: wave > 25 ? Math.max(0.34, 0.82 - wave * 0.01) : Math.max(0.62, 1.05 - wave * 0.014),
     };
   }
@@ -948,11 +1174,18 @@ function makeEnemy(type = "skeleton", overrides = null) {
   const wave = state.wave;
   const flyingBoss = type === "flyingBoss";
   const groundBoss = type === "groundBoss";
-  const boss = flyingBoss || groundBoss;
+  const splitBoss = type === "splitBoss";
+  const frostBoss = type === "frostBoss";
+  const healerBoss = type === "healerBoss";
+  const speedBoss = type === "speedBoss";
+  const boss = flyingBoss || groundBoss || splitBoss || frostBoss || healerBoss || speedBoss;
   const dragon = flyingBoss || type === "dragon";
   const runner = type === "centaur";
   const bruiser = type === "knight";
-  const splitter = type === "splitter";
+  const splitter = type === "splitter" || splitBoss;
+  const healer = type === "healer" || healerBoss;
+  const frostWight = type === "frostWight" || frostBoss;
+  const speedBanner = type === "speedBanner" || speedBoss;
   const difficulty = difficultyStats();
   const lateWave = Math.max(0, wave - 12);
   const waveScale = 1 + Math.max(0, wave - 1) * 0.07 + lateWave * lateWave * 0.0016;
@@ -960,35 +1193,58 @@ function makeEnemy(type = "skeleton", overrides = null) {
     ? 1450 + wave * 135
     : groundBoss
       ? 1040 + wave * 108
+    : splitBoss
+      ? 1120 + wave * 112
+    : frostBoss
+      ? 1180 + wave * 118
+    : healerBoss
+      ? 1080 + wave * 110
+    : speedBoss
+      ? 1020 + wave * 104
     : dragon
       ? 470 + wave * 52
       : bruiser
         ? 215 + wave * 32
         : splitter
           ? 260 + wave * 36
-          : runner
-            ? 80 + wave * 17
-            : 92 + wave * 21;
+          : healer
+            ? 170 + wave * 25
+            : frostWight
+              ? 250 + wave * 30
+              : speedBanner
+                ? 190 + wave * 24
+                : runner
+                  ? 80 + wave * 17
+                  : 92 + wave * 21;
   const hp = Math.round(baseHp * waveScale * difficulty.hp);
   const start = tileCenter(spawnTile);
   const enemy = {
+    id: nextEnemyId++,
     x: start.x - 34,
     y: start.y,
     path: flyingBoss || dragon ? flyingPath() : currentPath.length ? currentPath : findPath(),
     targetIndex: 0,
     hp,
     maxHp: hp,
-    speed: (flyingBoss ? 33 + wave * 0.8 : groundBoss ? 36 + wave * 0.9 : dragon ? 42 + wave * 1.1 : runner ? 104 + wave * 2.35 : bruiser ? 42 + wave * 1.15 : splitter ? 46 + wave * 1.1 : 64 + wave * 1.75) * difficulty.speed,
-    reward: scaledGold(flyingBoss ? 170 + wave * 4 : groundBoss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 17 : splitter ? 18 : runner ? 10 : 8),
-    radius: flyingBoss ? 25 : groundBoss ? 23 : dragon ? 18 : bruiser ? 14 : splitter ? 15 : runner ? 9 : 11,
-    color: flyingBoss ? "#8f2520" : groundBoss ? "#7b6552" : dragon ? "#d13f2f" : bruiser ? "#b9b2a2" : splitter ? "#b8935b" : runner ? "#73c66b" : "#d9d1bd",
-    name: flyingBoss ? "Elder Dragon" : groundBoss ? "Siege Lord" : dragon ? "Dragon" : bruiser ? "Fallen Knight" : splitter ? "Bone Carrier" : runner ? "Centaur" : "Skeleton",
-    glyph: flyingBoss ? "B" : groundBoss ? "L" : dragon ? "D" : bruiser ? "K" : splitter ? "P" : runner ? "C" : "S",
+    speed: (flyingBoss ? 33 + wave * 0.8 : groundBoss || splitBoss || frostBoss || healerBoss || speedBoss ? 36 + wave * 0.9 : dragon ? 42 + wave * 1.1 : runner ? 104 + wave * 2.35 : bruiser ? 42 + wave * 1.15 : splitter ? 46 + wave * 1.1 : healer ? 56 + wave * 1.35 : frostWight ? 50 + wave * 1.25 : speedBanner ? 60 + wave * 1.45 : 64 + wave * 1.75) * difficulty.speed,
+    reward: scaledGold(flyingBoss ? 170 + wave * 4 : boss ? 115 + wave * 3 : dragon ? 48 : bruiser ? 17 : splitter ? 18 : healer ? 24 : frostWight ? 19 : speedBanner ? 22 : runner ? 10 : 8),
+    radius: flyingBoss ? 25 : boss ? 23 : dragon ? 18 : bruiser ? 14 : splitter ? 15 : healer ? 12 : frostWight ? 13 : speedBanner ? 12 : runner ? 9 : 11,
+    color: flyingBoss ? "#8f2520" : groundBoss ? "#7b6552" : splitBoss ? "#b8935b" : frostBoss ? "#8bd8ff" : healerBoss ? "#9fe3a1" : speedBoss ? "#f05f45" : dragon ? "#d13f2f" : bruiser ? "#b9b2a2" : splitter ? "#b8935b" : healer ? "#9fe3a1" : frostWight ? "#8bd8ff" : speedBanner ? "#f05f45" : runner ? "#73c66b" : "#d9d1bd",
+    name: flyingBoss ? "Elder Dragon" : groundBoss ? "Siege Lord" : splitBoss ? "Bone Tyrant" : frostBoss ? "Frost Lord" : healerBoss ? "High Priest" : speedBoss ? "War Herald" : dragon ? "Dragon" : bruiser ? "Fallen Knight" : splitter ? "Bone Carrier" : healer ? (wave >= 75 ? "High Cleric" : "Cult Healer") : frostWight ? "Frost Wight" : speedBanner ? "War Banner" : runner ? "Centaur" : "Skeleton",
+    glyph: flyingBoss ? "B" : groundBoss ? "L" : splitBoss ? "T" : frostBoss ? "F" : healerBoss ? "P" : speedBoss ? "W" : dragon ? "D" : bruiser ? "K" : splitter ? "P" : healer ? "H" : frostWight ? "R" : speedBanner ? "!" : runner ? "C" : "S",
     flying: flyingBoss || dragon,
     boss,
     livesDamage: flyingBoss ? 6 : groundBoss ? 4 : dragon ? 2 : 1,
     deathSpawnType: splitter ? "skeleton" : null,
-    deathSpawnCount: splitter ? 3 : 0,
+    deathSpawnCount: splitBoss ? 9 : splitter ? 3 : 0,
+    coldResist: frostBoss ? 0.22 : frostWight ? 0.35 : 1,
+    healRadius: healerBoss ? 112 : healer ? (wave >= 75 ? 92 : 58) : 0,
+    healAmount: healerBoss ? Math.round(42 * difficulty.hp) : healer ? Math.round((wave >= 75 ? 24 : 34) * difficulty.hp) : 0,
+    healRate: healerBoss ? 0.62 : healer ? (wave >= 75 ? 0.72 : 1.35) : 0,
+    healAuraDps: healerBoss ? Math.round((16 + wave * 0.45) * difficulty.hp) : healer && wave >= 75 ? Math.round((10 + wave * 0.35) * difficulty.hp) : 0,
+    healCooldown: healer ? 0.35 : 0,
+    speedAuraRadius: speedBoss ? 118 : speedBanner ? 86 : 0,
+    speedAuraMult: speedBoss ? 1.36 : speedBanner ? 1.28 : 1,
     slowTime: 0,
     slowSources: {},
     burnTime: 0,
@@ -1044,6 +1300,7 @@ function resetGame() {
   state.enemies = [];
   state.projectiles = [];
   state.effects = [];
+  state.fireTiles = [];
   state.difficulty = Number(ui.difficulty.value);
   selectedTower = null;
   waveActive = false;
@@ -1052,6 +1309,7 @@ function resetGame() {
   difficultyLocked = false;
   raceLocked = false;
   nextTowerId = 1;
+  nextEnemyId = 1;
   ui.difficulty.disabled = false;
   ui.difficultyLock.textContent = "Locks when the first wave starts.";
   ui.raceButtons.forEach((button) => {
@@ -1082,6 +1340,7 @@ function createTower(type, tile) {
     finalForm: false,
     spent: base.cost,
     cooldown: 0,
+    builtWave: state.wave,
   };
 }
 
@@ -1089,6 +1348,13 @@ function applyStatModifier(stats, modifier) {
   if (!modifier) return stats;
   if (modifier.damageAdd !== undefined) stats.damage = Math.max(0, stats.damage + modifier.damageAdd);
   if (modifier.damageMult !== undefined) stats.damage = Math.max(1, Math.round(stats.damage * modifier.damageMult));
+  if (modifier.projectileSpeed !== undefined) stats.projectileSpeed = modifier.projectileSpeed;
+  if (modifier.auraDamage !== undefined) stats.auraDamage = modifier.auraDamage;
+  if (modifier.slow !== undefined) stats.slow = modifier.slow;
+  if (modifier.shockwave !== undefined) stats.shockwave = modifier.shockwave;
+  if (modifier.groundOnly !== undefined) stats.groundOnly = modifier.groundOnly;
+  if (modifier.burnDps !== undefined) stats.burnDps = modifier.burnDps;
+  if (modifier.burnDuration !== undefined) stats.burnDuration = modifier.burnDuration;
   if (modifier.burnDpsMult !== undefined) stats.burnDps = Math.max(1, Math.round((stats.burnDps || 0) * modifier.burnDpsMult));
   if (modifier.burnDurationAdd !== undefined) stats.burnDuration = (stats.burnDuration || 0) + modifier.burnDurationAdd;
   if (modifier.bleedDps !== undefined) stats.bleedDps = modifier.bleedDps;
@@ -1099,6 +1365,40 @@ function applyStatModifier(stats, modifier) {
   if (modifier.vulnMultAdd !== undefined) stats.vulnMult = (stats.vulnMult || 1) + modifier.vulnMultAdd;
   if (modifier.vulnDuration !== undefined) stats.vulnDuration = modifier.vulnDuration;
   if (modifier.vulnDurationAdd !== undefined) stats.vulnDuration = (stats.vulnDuration || 0) + modifier.vulnDurationAdd;
+  if (modifier.antiHealMult !== undefined) stats.antiHealMult = modifier.antiHealMult;
+  if (modifier.antiHealDuration !== undefined) stats.antiHealDuration = modifier.antiHealDuration;
+  if (modifier.antiHealDurationAdd !== undefined) stats.antiHealDuration = (stats.antiHealDuration || 0) + modifier.antiHealDurationAdd;
+  if (modifier.bladeStormMult !== undefined) stats.bladeStormMult = modifier.bladeStormMult;
+  if (modifier.bladeStormMultAdd !== undefined) stats.bladeStormMult = (stats.bladeStormMult || 0) + modifier.bladeStormMultAdd;
+  if (modifier.cancelSpeedAuraDuration !== undefined) stats.cancelSpeedAuraDuration = modifier.cancelSpeedAuraDuration;
+  if (modifier.cancelSpeedAuraDurationAdd !== undefined) stats.cancelSpeedAuraDuration = (stats.cancelSpeedAuraDuration || 0) + modifier.cancelSpeedAuraDurationAdd;
+  if (modifier.bossPriority !== undefined) stats.bossPriority = modifier.bossPriority;
+  if (modifier.maxSplashTargets !== undefined) stats.maxSplashTargets = modifier.maxSplashTargets;
+  if (modifier.tileBurnDuration !== undefined) stats.tileBurnDuration = modifier.tileBurnDuration;
+  if (modifier.tileBurnDurationAdd !== undefined) stats.tileBurnDuration = (stats.tileBurnDuration || 0) + modifier.tileBurnDurationAdd;
+  if (modifier.tileBurnDps !== undefined) stats.tileBurnDps = modifier.tileBurnDps;
+  if (modifier.tileBurnDpsMult !== undefined) stats.tileBurnDps = Math.max(1, Math.round((stats.tileBurnDps || 0) * modifier.tileBurnDpsMult));
+  if (modifier.tileBurnRadius !== undefined) stats.tileBurnRadius = modifier.tileBurnRadius;
+  if (modifier.tileBurnRadiusAdd !== undefined) stats.tileBurnRadius = (stats.tileBurnRadius || 0) + modifier.tileBurnRadiusAdd;
+  if (modifier.airDamageMult !== undefined) stats.airDamageMult = modifier.airDamageMult;
+  if (modifier.airDamageMultAdd !== undefined) stats.airDamageMult = (stats.airDamageMult || 1) + modifier.airDamageMultAdd;
+  if (modifier.bossDamageMult !== undefined) stats.bossDamageMult = modifier.bossDamageMult;
+  if (modifier.bossDamageMultAdd !== undefined) stats.bossDamageMult = (stats.bossDamageMult || 1) + modifier.bossDamageMultAdd;
+  if (modifier.executeAirThreshold !== undefined) stats.executeAirThreshold = modifier.executeAirThreshold;
+  if (modifier.executeAirThresholdAdd !== undefined) stats.executeAirThreshold = (stats.executeAirThreshold || 0) + modifier.executeAirThresholdAdd;
+  if (modifier.repeatDamageAdd !== undefined) stats.repeatDamageAdd = modifier.repeatDamageAdd;
+  if (modifier.repeatDamageAddAdd !== undefined) stats.repeatDamageAdd = (stats.repeatDamageAdd || 0) + modifier.repeatDamageAddAdd;
+  if (modifier.repeatDamageMax !== undefined) stats.repeatDamageMax = modifier.repeatDamageMax;
+  if (modifier.repeatDamageMaxAdd !== undefined) stats.repeatDamageMax = (stats.repeatDamageMax || 0) + modifier.repeatDamageMaxAdd;
+  if (modifier.knockback !== undefined) stats.knockback = modifier.knockback;
+  if (modifier.knockbackAdd !== undefined) stats.knockback = (stats.knockback || 0) + modifier.knockbackAdd;
+  if (modifier.coldPierce !== undefined) stats.coldPierce = modifier.coldPierce;
+  if (modifier.coldPierceAdd !== undefined) stats.coldPierce = (stats.coldPierce || 0) + modifier.coldPierceAdd;
+  if (modifier.slowSpreadCount !== undefined) stats.slowSpreadCount = modifier.slowSpreadCount;
+  if (modifier.slowSpreadCountAdd !== undefined) stats.slowSpreadCount = (stats.slowSpreadCount || 0) + modifier.slowSpreadCountAdd;
+  if (modifier.slowSpreadRange !== undefined) stats.slowSpreadRange = modifier.slowSpreadRange;
+  if (modifier.slowSpreadRangeAdd !== undefined) stats.slowSpreadRange = (stats.slowSpreadRange || 0) + modifier.slowSpreadRangeAdd;
+  if (modifier.splashHitsGround !== undefined) stats.splashHitsGround = modifier.splashHitsGround;
   if (modifier.fireRateMult !== undefined) stats.fireRate = Math.max(0.14, stats.fireRate * modifier.fireRateMult);
   if (modifier.rangeAdd !== undefined) stats.range = Math.max(32, stats.range + modifier.rangeAdd);
   if (modifier.splashRadiusAdd !== undefined) stats.splashRadius = Math.max(0, (stats.splashRadius || 0) + modifier.splashRadiusAdd);
@@ -1133,6 +1433,7 @@ function towerStats(tower) {
     chainCount: base.chainCount ? base.chainCount + Math.floor((tower.level - 1) / 2) : 0,
     lineWidth: base.lineWidth ? base.lineWidth + Math.floor((tower.level - 1) * 1.5) : 0,
     burnDps: base.burnDps ? Math.round(base.burnDps * levelBoost) : 0,
+    burnDuration: base.burnDuration ? base.burnDuration + (tower.level - 1) * 0.12 : 0,
   };
   if (!evolution) return stats;
 
@@ -1153,26 +1454,31 @@ function towerStats(tower) {
 }
 
 function upgradeCost(tower) {
-  const baseCost = tower.level < 4 ? 38 + tower.level * 30 : 110 + tower.level * 62;
-  if (tower.level === 2) return Math.round(baseCost * 1.15);
-  if (tower.level === 3) return Math.round(baseCost * 1.2);
-  return baseCost;
+  const towerCost = towerTypes[tower.type].cost;
+  const levelCost = tower.level < 4 ? towerCost * (0.72 + tower.level * 0.5) : towerCost * (1.85 + tower.level * 0.72);
+  if (tower.level === 2) return Math.round(levelCost * 1.15);
+  if (tower.level === 3) return Math.round(levelCost * 1.2);
+  return Math.round(levelCost);
 }
 
 function evolutionCost(tower) {
-  return Math.round((150 + towerTypes[tower.type].cost) * 1.3);
+  const towerCost = towerTypes[tower.type].cost;
+  return Math.round(towerCost * 4.1);
 }
 
 function specializationCost(tower) {
-  return 520 + towerTypes[tower.type].cost * 3;
+  const towerCost = towerTypes[tower.type].cost;
+  return Math.round(towerCost * 8.8);
 }
 
 function finalFormCost(tower) {
-  return 1400 + towerTypes[tower.type].cost * 5;
+  const towerCost = towerTypes[tower.type].cost;
+  return Math.round(towerCost * 22);
 }
 
 function sellValue(tower) {
-  return Math.floor(tower.spent * 0.68);
+  const refundRate = towerTypes[tower.type]?.bank ? 0.5 : 0.68;
+  return Math.floor(tower.spent * refundRate);
 }
 
 function updateSelection() {
@@ -1210,14 +1516,27 @@ function updateSelection() {
         : `Upgrade ${cost}g`;
   const extras = [];
   if (stats.melee) extras.push("melee");
+  if (stats.bank) extras.push(`stores ${bankIncome(selectedTower)}g/wave`, `stored ${selectedTower.storedGold || 0}g`);
   if (stats.antiAirOnly) extras.push("flying only");
   if (stats.auraSlow || stats.auraDamage) extras.push("aura");
   if (stats.lineStrike) extras.push("line");
   if (stats.shockwave) extras.push("shockwave");
   if (stats.stun) extras.push("stuns");
+  if (stats.knockback) extras.push("knockback");
   if (stats.burnDps) extras.push("burns");
   if (stats.bleedDps) extras.push("bleeds");
   if (stats.vulnMult) extras.push("breaks armor");
+  if (stats.antiHealMult) extras.push("anti-heal");
+  if (stats.bladeStormMult) extras.push("overlap scaling");
+  if (stats.cancelSpeedAuraDuration) extras.push("cancels speed aura");
+  if (stats.tileBurnDuration) extras.push("fire tiles");
+  if (stats.bossPriority) extras.push("boss priority");
+  if (stats.airDamageMult) extras.push("anti-air bonus");
+  if (stats.bossDamageMult) extras.push("boss bonus");
+  if (stats.repeatDamageAdd) extras.push("focus scaling");
+  if (stats.executeAirThreshold) extras.push("air execute");
+  if (stats.coldPierce) extras.push("pierces cold resist");
+  if (stats.slowSpreadCount) extras.push("spreads slow");
   if (stats.multiShot) extras.push(`${stats.multiShot} shots`);
   if (stats.chain) extras.push(`${stats.chainCount} chains`);
   if (stats.splashRadius) extras.push(`${Math.round(stats.splashRadius)} splash`);
@@ -1290,6 +1609,9 @@ function placeOrSelect(tile) {
 
 function fireTower(tower) {
   const stats = towerStats(tower);
+  if (stats.bank) return;
+  const prefersFreshSlow =
+    stats.slow && !stats.auraSlow && !stats.splashRadius && !stats.chain && !stats.lineStrike && !stats.melee;
   const targets = state.enemies
     .filter(
       (enemy) =>
@@ -1297,7 +1619,12 @@ function fireTower(tower) {
         (!stats.antiAirOnly || enemy.flying) &&
         (!stats.groundOnly || !enemy.flying),
     )
-    .sort((a, b) => enemyProgress(b) - enemyProgress(a));
+    .sort(
+      (a, b) =>
+        (stats.bossPriority ? Number(b.boss) - Number(a.boss) : 0) ||
+        (prefersFreshSlow ? Number(isSlowed(a)) - Number(isSlowed(b)) : 0) ||
+        enemyProgress(b) - enemyProgress(a),
+    );
 
   const target = targets[0];
   if (!target) return;
@@ -1306,7 +1633,11 @@ function fireTower(tower) {
   if (stats.auraSlow) {
     for (const enemy of targets) {
       applyDamage(enemy, stats.damage);
-      if (state.enemies.includes(enemy)) applySlow(enemy, stats.slowDuration || 1.4, tower.id);
+      if (state.enemies.includes(enemy)) applySlow(enemy, stats.slowDuration || 1.4, tower.id, stats.coldPierce || 0);
+      if (stats.cancelSpeedAuraDuration && state.enemies.includes(enemy)) {
+        enemy.speedAuraSuppressedTime = Math.max(enemy.speedAuraSuppressedTime || 0, stats.cancelSpeedAuraDuration);
+      }
+      if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.12);
     }
     state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.22, color: stats.color });
     return;
@@ -1318,6 +1649,9 @@ function fireTower(tower) {
         applyVulnerability(enemy, stats.vulnMult, stats.vulnDuration || 1.4);
       }
       applyDamage(enemy, stats.damage);
+      if (stats.burnDps && state.enemies.includes(enemy)) {
+        applyBurn(enemy, stats.burnDps, stats.burnDuration || 2);
+      }
     }
     state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.18, color: stats.color });
     return;
@@ -1335,7 +1669,9 @@ function fireTower(tower) {
       .sort((a, b) => enemyProgress(b) - enemyProgress(a));
     for (const enemy of shockTargets) {
       const distanceMod = 1 - clamp(dist(enemy, tower) / radius, 0, 0.55);
-      applyDamage(enemy, Math.max(1, Math.round(stats.damage * distanceMod)));
+      applyDamage(enemy, Math.max(1, Math.round(scaledTowerDamage(stats, enemy) * distanceMod)));
+      if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.12);
+      if (stats.burnDps && state.enemies.includes(enemy)) applyBurn(enemy, stats.burnDps, stats.burnDuration || 2);
     }
     state.effects.push({ x: tower.x, y: tower.y, r: radius, life: 0.2, color: stats.color });
     return;
@@ -1347,7 +1683,7 @@ function fireTower(tower) {
     if (!plan) return;
     const lineTargets = plan.hits.sort((a, b) => enemyProgress(b) - enemyProgress(a));
     for (const enemy of lineTargets) {
-      applyDamage(enemy, stats.damage);
+      applyDamage(enemy, scaledTowerDamage(stats, enemy));
       if (stats.bleedDps && state.enemies.includes(enemy)) {
         applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3);
       }
@@ -1367,9 +1703,22 @@ function fireTower(tower) {
 
   if (stats.melee) {
     const meleeTargets = targets.slice(0, stats.multiShot || 1);
+    const bladeStormCount = stats.bladeStormMult
+      ? state.towers.filter((item) => {
+          if (item === tower) return false;
+          const otherStats = towerStats(item);
+          return otherStats.bladeStormMult && dist(item, tower) <= Math.max(stats.range, otherStats.range) + 8;
+        }).length
+      : 0;
     for (const enemy of meleeTargets) {
-      applyDamage(enemy, stats.damage);
+      const bladeStormDamage = stats.bladeStormMult
+        ? Math.round(scaledTowerDamage(stats, enemy) * (1 + Math.min(4, bladeStormCount) * stats.bladeStormMult))
+        : scaledTowerDamage(stats, enemy);
+      applyDamage(enemy, bladeStormDamage);
       if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.25);
+      if (stats.knockback && state.enemies.includes(enemy)) applyKnockback(enemy, stats.knockback);
+      if (stats.bleedDps && state.enemies.includes(enemy)) applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3);
+      if (stats.antiHealMult && state.enemies.includes(enemy)) applyAntiHeal(enemy, stats.antiHealMult, stats.antiHealDuration || 2);
       state.effects.push({ x: enemy.x, y: enemy.y, r: 18, life: 0.16, color: stats.color });
     }
     return;
@@ -1377,6 +1726,14 @@ function fireTower(tower) {
 
   const shots = targets.slice(0, stats.multiShot || 1);
   for (const shotTarget of shots) {
+    const repeatStack =
+      stats.repeatDamageAdd && tower.focusTargetId === shotTarget.id
+        ? Math.min(tower.focusStacks || 0, stats.repeatDamageMax || 8)
+        : 0;
+    if (stats.repeatDamageAdd) {
+      tower.focusTargetId = shotTarget.id;
+      tower.focusStacks = tower.focusTargetId === shotTarget.id ? repeatStack + 1 : 1;
+    }
     state.projectiles.push({
       x: tower.x,
       y: tower.y,
@@ -1385,20 +1742,33 @@ function fireTower(tower) {
       target: shotTarget,
       speed: stats.projectileSpeed,
       damage: stats.damage,
+      repeatStack,
       color: stats.color,
       chain: stats.chain,
       chainRange: stats.chainRange,
       chainCount: stats.chainCount,
       splashRadius: stats.splashRadius,
-      flyingOnlySplash: stats.antiAirOnly,
+      maxSplashTargets: stats.maxSplashTargets,
+      flyingOnlySplash: stats.antiAirOnly && !stats.splashHitsGround,
       slow: stats.slow,
       slowDuration: stats.slowDuration,
+      slowSpreadCount: stats.slowSpreadCount,
+      slowSpreadRange: stats.slowSpreadRange,
+      coldPierce: stats.coldPierce,
       stun: stats.stun,
       stunDuration: stats.stunDuration,
+      knockback: stats.knockback,
+      airDamageMult: stats.airDamageMult,
+      bossDamageMult: stats.bossDamageMult,
+      executeAirThreshold: stats.executeAirThreshold,
+      repeatDamageAdd: stats.repeatDamageAdd,
       burnDps: stats.burnDps,
       burnDuration: stats.burnDuration,
       bleedDps: stats.bleedDps,
       bleedDuration: stats.bleedDuration,
+      tileBurnDuration: stats.tileBurnDuration,
+      tileBurnDps: stats.tileBurnDps,
+      tileBurnRadius: stats.tileBurnRadius,
     });
   }
 }
@@ -1413,6 +1783,39 @@ function applyDamage(enemy, amount) {
     state.credits += enemy.reward;
     state.score += enemy.reward * 12;
     state.enemies = state.enemies.filter((item) => item !== enemy);
+  }
+}
+
+function scaledTowerDamage(stats, enemy, repeatStack = 0) {
+  let damage = stats.damage;
+  if (enemy.flying && stats.airDamageMult) damage *= stats.airDamageMult;
+  if (enemy.boss && stats.bossDamageMult) damage *= stats.bossDamageMult;
+  if (stats.repeatDamageAdd && repeatStack) damage *= 1 + Math.min(repeatStack, stats.repeatDamageMax || 8) * stats.repeatDamageAdd;
+  return Math.max(1, Math.round(damage));
+}
+
+function applyKnockback(enemy, distance) {
+  if (!enemy.path?.length || distance <= 0 || enemy.flying) return;
+  const bossMod = enemy.boss ? 0.35 : 1;
+  let remaining = distance * bossMod;
+  while (remaining > 0) {
+    const index = Math.max(0, enemy.targetIndex - 2);
+    const target = enemy.path[index];
+    if (!target) return;
+    const dx = target.x - enemy.x;
+    const dy = target.y - enemy.y;
+    const step = Math.hypot(dx, dy);
+    if (step <= remaining || step < 1) {
+      enemy.x = target.x;
+      enemy.y = target.y;
+      enemy.targetIndex = Math.max(1, index + 1);
+      remaining -= step;
+      if (index === 0) return;
+    } else {
+      enemy.x += (dx / step) * remaining;
+      enemy.y += (dy / step) * remaining;
+      return;
+    }
   }
 }
 
@@ -1453,13 +1856,19 @@ function spawnDeathChildren(enemy) {
   state.effects.push({ x: enemy.x, y: enemy.y, r: 26, life: 0.24, color: "#d9d1bd" });
 }
 
-function applySlow(enemy, duration, sourceId = null) {
+function applySlow(enemy, duration, sourceId = null, coldPierce = 0) {
+  const resist = Math.min(1, (enemy.coldResist || 1) + coldPierce);
+  const resistedDuration = duration * resist;
+  if (coldPierce > 0) {
+    enemy.coldPierceEffect = Math.max(enemy.coldPierceEffect || 0, coldPierce);
+    enemy.coldPierceTime = Math.max(enemy.coldPierceTime || 0, resistedDuration);
+  }
   if (sourceId !== null) {
     enemy.slowSources = enemy.slowSources || {};
-    enemy.slowSources[sourceId] = Math.max(enemy.slowSources[sourceId] || 0, duration);
+    enemy.slowSources[sourceId] = Math.max(enemy.slowSources[sourceId] || 0, resistedDuration);
     return;
   }
-  enemy.slowTime = Math.max(enemy.slowTime, duration);
+  enemy.slowTime = Math.max(enemy.slowTime, resistedDuration);
 }
 
 function updateSlowSources(enemy, dt) {
@@ -1474,6 +1883,10 @@ function updateSlowSources(enemy, dt) {
     }
   }
   return stacks;
+}
+
+function isSlowed(enemy) {
+  return enemy.slowTime > 0 || Object.keys(enemy.slowSources || {}).length > 0;
 }
 
 function applyStun(enemy, duration) {
@@ -1496,24 +1909,92 @@ function applyVulnerability(enemy, multiplier, duration) {
   enemy.vulnTime = Math.max(enemy.vulnTime || 0, duration);
 }
 
+function healEnemy(enemy, amount, source) {
+  if (amount <= 0 || enemy.hp >= enemy.maxHp) return;
+  const healed = amount * (enemy.antiHealTime > 0 ? enemy.antiHealMult || 1 : 1);
+  enemy.hp = Math.min(enemy.maxHp, enemy.hp + healed);
+  state.effects.push({ x: enemy.x, y: enemy.y, r: 10, life: 0.18, color: source?.color || "#9fe3a1" });
+}
+
+function applyAntiHeal(enemy, multiplier, duration) {
+  enemy.antiHealMult = Math.min(enemy.antiHealMult || 1, multiplier);
+  enemy.antiHealTime = Math.max(enemy.antiHealTime || 0, duration);
+}
+
+function updateSupportEnemies(dt) {
+  for (const support of [...state.enemies]) {
+    if (!state.enemies.includes(support)) continue;
+    if (support.healAuraDps) {
+      for (const ally of state.enemies) {
+        if (ally !== support && !ally.flying && dist(support, ally) <= support.healRadius) {
+          healEnemy(ally, support.healAuraDps * dt, support);
+        }
+      }
+      support.healFxCooldown = Math.max(0, (support.healFxCooldown || 0) - dt);
+      if (support.healFxCooldown <= 0) {
+        state.effects.push({ x: support.x, y: support.y, r: support.healRadius, life: 0.16, color: "#9fe3a1" });
+        support.healFxCooldown = 0.28;
+      }
+    } else if (support.healAmount) {
+      support.healCooldown = Math.max(0, (support.healCooldown || 0) - dt);
+      if (support.healCooldown <= 0) {
+        const target = state.enemies
+          .filter((enemy) => enemy !== support && !enemy.flying && enemy.hp < enemy.maxHp && dist(support, enemy) <= support.healRadius)
+          .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (target) {
+          healEnemy(target, support.healAmount, support);
+          state.effects.push({ x: support.x, y: support.y, r: support.healRadius, life: 0.12, color: "#9fe3a1" });
+        }
+        support.healCooldown = support.healRate;
+      }
+    }
+  }
+}
+
+function speedAuraMultiplier(enemy) {
+  let multiplier = 1;
+  for (const support of state.enemies) {
+    if (support === enemy || !support.speedAuraRadius) continue;
+    if (support.speedAuraSuppressedTime > 0) continue;
+    if (dist(support, enemy) <= support.speedAuraRadius) {
+      multiplier = Math.max(multiplier, support.speedAuraMult || 1);
+    }
+  }
+  return multiplier;
+}
+
 function resolveProjectileHit(projectile, target) {
   const impact = { x: target.x, y: target.y };
   const hitEnemies = projectile.splashRadius
     ? state.enemies.filter(
         (enemy) => dist(enemy, impact) <= projectile.splashRadius && (!projectile.flyingOnlySplash || enemy.flying),
       )
+      .sort((a, b) => dist(a, impact) - dist(b, impact))
+      .slice(0, projectile.maxSplashTargets || state.enemies.length)
     : [target];
 
   for (const enemy of hitEnemies) {
     const distanceMod = projectile.splashRadius
       ? 1 - clamp(dist(enemy, impact) / projectile.splashRadius, 0, 0.62)
       : 1;
-    applyDamage(enemy, Math.max(1, Math.round(projectile.damage * distanceMod)));
+    const damage = scaledTowerDamage(projectile, enemy, projectile.repeatStack) * distanceMod;
+    applyDamage(enemy, Math.max(1, Math.round(damage)));
     if (projectile.slow && state.enemies.includes(enemy)) {
-      applySlow(enemy, projectile.slowDuration || 1.4);
+      applySlow(enemy, projectile.slowDuration || 1.4, null, projectile.coldPierce || 0);
     }
     if (projectile.stun && state.enemies.includes(enemy)) {
       applyStun(enemy, projectile.stunDuration || 0.2);
+    }
+    if (projectile.knockback && state.enemies.includes(enemy)) {
+      applyKnockback(enemy, projectile.knockback);
+    }
+    if (
+      projectile.executeAirThreshold &&
+      enemy.flying &&
+      state.enemies.includes(enemy) &&
+      enemy.hp / enemy.maxHp <= projectile.executeAirThreshold
+    ) {
+      applyDamage(enemy, enemy.hp + 1);
     }
     if (projectile.burnDps && state.enemies.includes(enemy)) {
       applyBurn(enemy, projectile.burnDps, projectile.burnDuration || 2);
@@ -1523,22 +2004,55 @@ function resolveProjectileHit(projectile, target) {
     }
   }
 
+  if (projectile.slowSpreadCount && state.enemies.includes(target)) {
+    const spreadTargets = state.enemies
+      .filter(
+        (enemy) =>
+          enemy !== target &&
+          dist(enemy, target) <= (projectile.slowSpreadRange || 74) &&
+          enemy.slowTime <= 0 &&
+          Object.keys(enemy.slowSources || {}).length === 0,
+      )
+      .sort((a, b) => dist(a, target) - dist(b, target))
+      .slice(0, projectile.slowSpreadCount);
+    for (const enemy of spreadTargets) {
+      applySlow(enemy, projectile.slowDuration || 1.4, null, projectile.coldPierce || 0);
+      state.effects.push({ x: enemy.x, y: enemy.y, r: 16, life: 0.18, color: projectile.color });
+    }
+  }
+
   if (projectile.chain) {
     const chained = state.enemies
       .filter((enemy) => enemy !== target && dist(enemy, target) < projectile.chainRange)
       .sort((a, b) => dist(a, target) - dist(b, target))
       .slice(0, projectile.chainCount);
     for (const enemy of chained) {
-      applyDamage(enemy, Math.round(projectile.damage * 0.55));
+      applyDamage(enemy, Math.round(scaledTowerDamage(projectile, enemy) * 0.55));
+      if (projectile.stun && state.enemies.includes(enemy)) {
+        applyStun(enemy, (projectile.stunDuration || 0.2) * 0.65);
+      }
       state.effects.push({ x: enemy.x, y: enemy.y, r: 18, life: 0.18, color: projectile.color });
     }
   }
 
   const burstRadius = projectile.splashRadius || 22;
   state.effects.push({ x: impact.x, y: impact.y, r: burstRadius * 0.35, life: 0.22, color: projectile.color });
+  if (projectile.tileBurnDuration && projectile.tileBurnDps) {
+    state.fireTiles.push({
+      x: impact.x,
+      y: impact.y,
+      r: projectile.tileBurnRadius || 34,
+      dps: projectile.tileBurnDps,
+      duration: projectile.tileBurnDuration,
+      life: projectile.tileBurnDuration,
+      color: projectile.color,
+    });
+  }
 }
 
 function updateEnemies(dt) {
+  updateSupportEnemies(dt);
+
   for (const enemy of [...state.enemies]) {
     if (!enemy.path.length) {
       enemy.path = currentPath;
@@ -1557,19 +2071,31 @@ function updateEnemies(dt) {
       enemy.bleedTime = Math.max(0, enemy.bleedTime - dt);
       if (enemy.bleedTime <= 0) enemy.bleedDps = 0;
     }
+    for (const fireTile of state.fireTiles) {
+      if (dist(enemy, fireTile) <= fireTile.r && !enemy.flying) {
+        applyBurn(enemy, fireTile.dps, 1.1);
+        break;
+      }
+    }
 
     const stunned = enemy.stunTime > 0;
     const auraSlowStacks = updateSlowSources(enemy, dt);
     const cappedAuraStacks = Math.min(auraSlowStacks, 2);
-    const auraSlowMod = cappedAuraStacks ? 1 - cappedAuraStacks * 0.32 : 1;
-    const projectileSlowMod = enemy.slowTime > 0 ? 0.48 : 1;
+    const slowEffect = Math.min(1, (enemy.coldResist || 1) + (enemy.coldPierceTime > 0 ? enemy.coldPierceEffect || 0 : 0));
+    const auraSlowMod = cappedAuraStacks ? 1 - cappedAuraStacks * 0.32 * slowEffect : 1;
+    const projectileSlowMod = enemy.slowTime > 0 ? 1 - 0.52 * slowEffect : 1;
     const slowMod = Math.min(auraSlowMod, projectileSlowMod);
     enemy.slowTime = Math.max(0, enemy.slowTime - dt);
+    enemy.coldPierceTime = Math.max(0, (enemy.coldPierceTime || 0) - dt);
+    if (enemy.coldPierceTime <= 0) enemy.coldPierceEffect = 0;
     enemy.stunTime = Math.max(0, (enemy.stunTime || 0) - dt);
     enemy.vulnTime = Math.max(0, (enemy.vulnTime || 0) - dt);
     if (enemy.vulnTime <= 0) enemy.vulnMult = 1;
+    enemy.antiHealTime = Math.max(0, (enemy.antiHealTime || 0) - dt);
+    if (enemy.antiHealTime <= 0) enemy.antiHealMult = 1;
+    enemy.speedAuraSuppressedTime = Math.max(0, (enemy.speedAuraSuppressedTime || 0) - dt);
     if (stunned) continue;
-    let move = enemy.speed * slowMod * dt;
+    let move = enemy.speed * slowMod * speedAuraMultiplier(enemy) * dt;
 
     while (move > 0 && enemy.targetIndex < enemy.path.length) {
       const target = enemy.path[enemy.targetIndex];
@@ -1641,9 +2167,16 @@ function update(dt) {
 
     if (state.spawned >= state.toSpawn && state.enemies.length === 0) {
       waveActive = false;
+      let bankGold = 0;
+      for (const tower of state.towers.filter((tower) => towerTypes[tower.type]?.bank)) {
+        const income = bankIncome(tower);
+        tower.storedGold = (tower.storedGold || 0) + income;
+        bankGold += income;
+      }
       state.wave += 1;
-      state.credits += scaledGold(32 + state.wave * 5);
-      ui.banner.textContent = `Wave cleared. Build for wave ${state.wave}.`;
+      const clearGold = scaledGold(32 + state.wave * 5);
+      state.credits += clearGold;
+      ui.banner.textContent = `Wave cleared. Build for wave ${state.wave}.${bankGold ? ` Banks stored ${bankGold}g.` : ""}`;
       ui.start.disabled = false;
       updateWavePreview();
     }
@@ -1656,6 +2189,10 @@ function update(dt) {
 
   updateEnemies(dt);
   updateProjectiles(dt);
+  for (const fireTile of state.fireTiles) {
+    fireTile.life -= dt;
+  }
+  state.fireTiles = state.fireTiles.filter((fireTile) => fireTile.life > 0);
   for (const effect of state.effects) {
     effect.life -= dt;
     if (effect.type !== "line") effect.r += 75 * dt;
@@ -1687,6 +2224,15 @@ function drawTerrain() {
     ctx.beginPath();
     ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  for (const fireTile of state.fireTiles) {
+    ctx.globalAlpha = clamp(fireTile.life / fireTile.duration, 0.15, 0.45);
+    ctx.fillStyle = "#ff8b3d";
+    ctx.beginPath();
+    ctx.arc(fireTile.x, fireTile.y, fireTile.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
   ctx.fillStyle = "rgba(12,18,11,0.22)";
@@ -1878,8 +2424,8 @@ function defenderPalette(stats, tower) {
 }
 
 function enemyPalette(enemy) {
-  const slowed = enemy.slowTime > 0 || Object.keys(enemy.slowSources || {}).length > 0;
-  const color = enemy.stunTime > 0 ? "#f4c95d" : slowed ? "#b8f5ff" : enemy.burnTime > 0 ? "#ff8b3d" : enemy.bleedTime > 0 ? "#ff6f8e" : enemy.vulnTime > 0 ? "#d9a441" : enemy.color;
+  const slowed = isSlowed(enemy);
+  const color = enemy.stunTime > 0 ? "#f4c95d" : slowed ? "#b8f5ff" : enemy.burnTime > 0 ? "#ff8b3d" : enemy.antiHealTime > 0 ? "#78e08f" : enemy.bleedTime > 0 ? "#ff6f8e" : enemy.vulnTime > 0 ? "#d9a441" : enemy.color;
   return {
     b: "#17120d",
     h: "#8f6f42",
@@ -1913,8 +2459,21 @@ function drawTower(tower) {
     ctx.stroke();
   }
 
+  if (stats.bank) {
+    ctx.fillStyle = "#101216";
+    ctx.fillRect(tower.x - 12, tower.y - 11, 24, 24);
+    ctx.strokeStyle = "#f0c14b";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(tower.x - 12, tower.y - 11, 24, 24);
+    ctx.fillStyle = "#f0c14b";
+    ctx.font = "900 18px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("$", tower.x, tower.y + 1);
+  } else {
   const bob = Math.sin(animTime * 3.2 + tower.col * 0.7 + tower.row * 0.4) * 1.2;
   drawPixelSprite(spritePatterns[defenderSprite(tower, stats)], tower.x, tower.y - 2 + bob, 3, defenderPalette(stats, tower));
+  }
 
   ctx.fillStyle = "#fff6df";
   ctx.font = "800 10px system-ui";
@@ -1948,7 +2507,15 @@ function drawEnemyShape(enemy) {
     return;
   }
 
-  if (enemy.name === "Fallen Knight" || enemy.name === "Siege Lord" || enemy.name === "Bone Carrier") {
+  if (
+    enemy.name === "Fallen Knight" ||
+    enemy.name === "Siege Lord" ||
+    enemy.name === "Bone Carrier" ||
+    enemy.name === "Bone Tyrant" ||
+    enemy.name === "Frost Lord" ||
+    enemy.name === "High Priest" ||
+    enemy.name === "War Herald"
+  ) {
     drawPixelSprite(spritePatterns.knight, enemy.x, enemy.y - 2 + bob, enemy.boss ? 4 : 3, enemyPalette(enemy));
     return;
   }
@@ -1958,6 +2525,15 @@ function drawEnemyShape(enemy) {
 
 function drawEnemies() {
   for (const enemy of state.enemies) {
+    if (enemy.healRadius || enemy.speedAuraRadius) {
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = enemy.healRadius ? "#9fe3a1" : "#f05f45";
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, enemy.healRadius || enemy.speedAuraRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.beginPath();
     ctx.ellipse(enemy.x, enemy.y + enemy.radius + 7, enemy.radius * 0.95, 4, 0, 0, Math.PI * 2);
@@ -2032,8 +2608,10 @@ function drawPlacementPreview() {
   ctx.strokeRect(hoveredTile.col * cell + 2, hoveredTile.row * cell + 2, cell - 4, cell - 4);
   ctx.fillStyle = ok ? "rgba(244,201,93,0.06)" : "rgba(255,91,91,0.04)";
   ctx.beginPath();
-  ctx.arc(center.x, center.y, stats.range, 0, Math.PI * 2);
-  ctx.fill();
+  if (stats.range) {
+    ctx.arc(center.x, center.y, stats.range, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawGates() {
@@ -2095,6 +2673,7 @@ function shortTowerName(name) {
     .replace("Shield Guard", "Guard")
     .replace("Spear Thrower", "Spear")
     .replace("Frost Wizard", "Frost")
+    .replace("Royal Bank", "Bank")
     .replace("Storm Mage", "Storm")
     .replace("Flame Mage", "Flame")
     .replace("Sky Hunter", "Sky");
@@ -2164,8 +2743,9 @@ function setGameSpeed(speed) {
 function tryUpgradeSelected() {
   if (!selectedTower) return;
   const cost = upgradeCost(selectedTower);
+  const options = evolutions[selectedTower.type];
   const evolution = selectedTower.evolution ? evolutions[selectedTower.type]?.[selectedTower.evolution] : null;
-  const needsEvolution = selectedTower.level >= 4 && !selectedTower.evolution;
+  const needsEvolution = selectedTower.level >= 4 && !selectedTower.evolution && options;
   const needsSpecialization = selectedTower.level >= 8 && evolution?.forks && !selectedTower.specialization;
   if (selectedTower.level >= 12 || needsEvolution || needsSpecialization || state.credits < cost) return;
   state.credits -= cost;
@@ -2217,11 +2797,12 @@ function tryFinalFormSelected() {
 
 function sellSelected() {
   if (!selectedTower) return;
-  state.credits += sellValue(selectedTower);
+  const storedGold = towerTypes[selectedTower.type]?.bank ? selectedTower.storedGold || 0 : 0;
+  state.credits += sellValue(selectedTower) + storedGold;
   state.towers = state.towers.filter((tower) => tower !== selectedTower);
   selectedTower = null;
   refreshPath();
-  ui.banner.textContent = "Defender sold.";
+  ui.banner.textContent = storedGold ? `Bank sold. Collected ${storedGold}g.` : "Defender sold.";
   updateHud();
 }
 

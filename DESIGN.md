@@ -33,7 +33,7 @@ Single-target towers should hit dramatically harder than same-level AOE towers b
 
 ## Enemy Types
 
-Skeletons are the baseline. Centaurs pressure weak coverage with speed. Fallen knights test single-target damage. Dragons are flying enemies that ignore the maze and move directly toward the keep. Ground boss waves arrive every 10 waves. Flying boss waves arrive every 25 waves and override the ground boss cadence when they overlap.
+Skeletons are the baseline. Centaurs pressure weak coverage with speed. Fallen knights test single-target damage. Dragons are flying enemies that ignore the maze and move directly toward the keep. Cult Healers enter after wave 25 and pulse healing into injured ground allies, then upgrade into High Cleric healing auras after wave 75. Frost Wights enter after wave 35 and heavily resist slow effects. War Banners enter after wave 45 and speed up nearby enemies. Ground boss waves arrive every 10 waves. Flying boss waves arrive every 25 waves and override the ground boss cadence when they overlap. After wave 50, boss waves include a boss version of a support variant: Bone Tyrant splitters, Frost Lords, High Priests, or War Heralds. After wave 100, boss waves can bring multiple different boss variants at once.
 
 ## Run Controls
 
@@ -43,7 +43,7 @@ Difficulty increases enemy health and speed without increasing gold income. Diff
 
 The game previews the next wave with a named pattern, short tactical note, tags, and enemy count. Patterns include Skeleton Swarm, Centaur Rush, Knight Push, Bone Carriers, Mixed Vanguard, Dragon Skies, Ground Boss, and Flying Boss.
 
-Enemy health scales with both wave count and a late-wave curve so level 12 towers have something meaningful to chew through. After wave 25, every wave uses a mixed army of baseline bodies, speedy centaurs, tanky knights, Bone Carriers, and occasional dragons; the named pattern decides which threat is emphasized rather than making the whole wave one body type. Bone Carriers are tanky ground enemies that drop a few low-reward Bone Spawns where they die, forcing the maze to handle cleanup pressure without becoming a gold farm.
+Enemy health scales with both wave count and a late-wave curve so level 12 towers have something meaningful to chew through. After wave 25, every wave uses a mixed army of baseline bodies, speedy centaurs, tanky knights, Bone Carriers, support enemies, and occasional dragons; the named pattern decides which threat is emphasized rather than making the whole wave one body type. Bone Carriers are tanky ground enemies that drop a few low-reward Bone Spawns where they die, forcing the maze to handle cleanup pressure without becoming a gold farm.
 
 ## Keyboard Shortcuts
 
