@@ -1,5 +1,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const baseCanvasWidth = canvas.width;
+const baseCanvasHeight = canvas.height;
 
 const ui = {
   lives: document.getElementById("lives"),
@@ -29,13 +31,25 @@ const ui = {
   speedButtons: [...document.querySelectorAll(".speed-button")],
 };
 
-const W = canvas.width;
-const H = canvas.height;
+const W = baseCanvasWidth;
+const H = baseCanvasHeight;
 const cell = 32;
 const cols = W / cell;
 const rows = H / cell;
 const spawnTile = { col: 0, row: 9 };
 const keepTile = { col: cols - 1, row: 9 };
+
+function setupCanvasDpi() {
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  const targetWidth = Math.round(baseCanvasWidth * dpr);
+  const targetHeight = Math.round(baseCanvasHeight * dpr);
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
 
 const humanTowerTypes = {
   dart: {
@@ -762,6 +776,12 @@ const state = {
   projectiles: [],
   effects: [],
   fireTiles: [],
+  waveTime: 0,
+  testGoldGlitch: {
+    guardBuys: 0,
+    step: 0,
+    unlocked: false,
+  },
   difficulty: 3,
 };
 
@@ -1283,6 +1303,11 @@ function startWave() {
   state.spawned = 0;
   state.waveQueue = [...plan.queue];
   state.toSpawn = state.waveQueue.length;
+  state.waveTime = 0;
+  for (const tower of state.towers) {
+    tower.waveDamage = 0;
+    tower.waveSeconds = 0;
+  }
   spawnTimer = 0;
   ui.banner.textContent = `${plan.name} enters the maze`;
   ui.start.disabled = true;
@@ -1301,6 +1326,12 @@ function resetGame() {
   state.projectiles = [];
   state.effects = [];
   state.fireTiles = [];
+  state.waveTime = 0;
+  state.testGoldGlitch = {
+    guardBuys: 0,
+    step: 0,
+    unlocked: false,
+  };
   state.difficulty = Number(ui.difficulty.value);
   selectedTower = null;
   waveActive = false;
@@ -1341,6 +1372,9 @@ function createTower(type, tile) {
     spent: base.cost,
     cooldown: 0,
     builtWave: state.wave,
+    waveDamage: 0,
+    totalDamage: 0,
+    waveSeconds: 0,
   };
 }
 
@@ -1455,30 +1489,44 @@ function towerStats(tower) {
 
 function upgradeCost(tower) {
   const towerCost = towerTypes[tower.type].cost;
-  const levelCost = tower.level < 4 ? towerCost * (0.72 + tower.level * 0.5) : towerCost * (1.85 + tower.level * 0.72);
-  if (tower.level === 2) return Math.round(levelCost * 1.15);
-  if (tower.level === 3) return Math.round(levelCost * 1.2);
-  return Math.round(levelCost);
+  const levelMultipliers = {
+    1: 0.85,
+    2: 1.1,
+    3: 1.35,
+    4: 1.7,
+    5: 2.05,
+    6: 2.4,
+    7: 2.75,
+    8: 3.15,
+    9: 3.6,
+    10: 4.1,
+    11: 4.65,
+  };
+  return Math.round(towerCost * (levelMultipliers[tower.level] || 5.2));
 }
 
 function evolutionCost(tower) {
   const towerCost = towerTypes[tower.type].cost;
-  return Math.round(towerCost * 4.1);
+  return Math.round(towerCost * 2.6);
 }
 
 function specializationCost(tower) {
   const towerCost = towerTypes[tower.type].cost;
-  return Math.round(towerCost * 8.8);
+  return Math.round(towerCost * 4.2);
 }
 
 function finalFormCost(tower) {
   const towerCost = towerTypes[tower.type].cost;
-  return Math.round(towerCost * 22);
+  return Math.round(towerCost * 10.5);
 }
 
 function sellValue(tower) {
   const refundRate = towerTypes[tower.type]?.bank ? 0.5 : 0.68;
   return Math.floor(tower.spent * refundRate);
+}
+
+function towerDps(tower) {
+  return (tower.waveDamage || 0) / Math.max(1, tower.waveSeconds || 0);
 }
 
 function updateSelection() {
@@ -1542,6 +1590,10 @@ function updateSelection() {
   if (stats.splashRadius) extras.push(`${Math.round(stats.splashRadius)} splash`);
   if (stats.slow) extras.push("slows");
   if (selectedTower.finalForm) extras.push("capstone");
+  const waveDamage = Math.round(selectedTower.waveDamage || 0);
+  const totalDamage = Math.round(selectedTower.totalDamage || 0);
+  const dps = towerDps(selectedTower).toFixed(1);
+  extras.push(`${dps} DPS`, `${waveDamage} wave dmg`, `${totalDamage} total dmg`);
   ui.selectionTitle.textContent = `${stats.name} L${selectedTower.level}`;
   ui.selectionCopy.textContent = `Damage ${stats.damage}, range ${Math.round(stats.range)}${extras.length ? `, ${extras.join(", ")}` : ""}. ${nextUpgradeText}, sell ${sellValue(selectedTower)}g.`;
   ui.upgrade.disabled =
@@ -1579,6 +1631,32 @@ function updateHud() {
   updateSelection();
 }
 
+function recordTestGoldGlitchBuy(type) {
+  if (selectedRace !== "human" || state.testGoldGlitch.unlocked) return;
+  if (type === "guard") {
+    state.testGoldGlitch.guardBuys += 1;
+    return;
+  }
+  if (type === "dart" && state.testGoldGlitch.step === 1) {
+    state.testGoldGlitch.step = 2;
+  }
+}
+
+function recordTestGoldGlitchSell(tower) {
+  if (selectedRace !== "human" || state.testGoldGlitch.unlocked) return false;
+  if (tower.type !== "guard") return false;
+  if (state.testGoldGlitch.step === 0 && state.testGoldGlitch.guardBuys >= 2) {
+    state.testGoldGlitch.step = 1;
+    return false;
+  }
+  if (state.testGoldGlitch.step === 2) {
+    state.testGoldGlitch.unlocked = true;
+    state.credits += 999999;
+    return true;
+  }
+  return false;
+}
+
 function placeOrSelect(tile) {
   const existing = state.towers.find((tower) => sameTile(tower, tile));
   if (existing) {
@@ -1601,17 +1679,50 @@ function placeOrSelect(tile) {
   state.credits -= towerDef.cost;
   const tower = createTower(selectedBuild, tile);
   state.towers.push(tower);
+  recordTestGoldGlitchBuy(selectedBuild);
   selectedTower = tower;
   refreshPath();
   ui.banner.textContent = `${towerDef.name} holds the line.`;
   updateHud();
 }
 
+function timedDebuffScore(enemy, stats) {
+  let score = 0;
+  if (stats.slow && isSlowed(enemy)) score += 1;
+  if (stats.burnDps && enemy.burnTime > 0) score += 1;
+  if (stats.bleedDps && enemy.bleedTime > 0) score += 1;
+  if (stats.vulnMult && enemy.vulnTime > 0) score += 1;
+  if (stats.antiHealMult && enemy.antiHealTime > 0) score += 1;
+  if (stats.stun && enemy.stunTime > 0) score += 1;
+  if (stats.cancelSpeedAuraDuration && enemy.speedAuraSuppressedTime > 0) score += 1;
+  return score;
+}
+
+function prefersFreshTimedDebuff(stats) {
+  const appliesTimedDebuff =
+    stats.slow ||
+    stats.burnDps ||
+    stats.bleedDps ||
+    stats.vulnMult ||
+    stats.antiHealMult ||
+    stats.stun ||
+    stats.cancelSpeedAuraDuration;
+  return (
+    appliesTimedDebuff &&
+    !stats.auraSlow &&
+    !stats.auraDamage &&
+    !stats.splashRadius &&
+    !stats.chain &&
+    !stats.lineStrike &&
+    !stats.melee &&
+    !stats.shockwave
+  );
+}
+
 function fireTower(tower) {
   const stats = towerStats(tower);
   if (stats.bank) return;
-  const prefersFreshSlow =
-    stats.slow && !stats.auraSlow && !stats.splashRadius && !stats.chain && !stats.lineStrike && !stats.melee;
+  const prefersFreshDebuff = prefersFreshTimedDebuff(stats);
   const targets = state.enemies
     .filter(
       (enemy) =>
@@ -1622,7 +1733,7 @@ function fireTower(tower) {
     .sort(
       (a, b) =>
         (stats.bossPriority ? Number(b.boss) - Number(a.boss) : 0) ||
-        (prefersFreshSlow ? Number(isSlowed(a)) - Number(isSlowed(b)) : 0) ||
+        (prefersFreshDebuff ? timedDebuffScore(a, stats) - timedDebuffScore(b, stats) : 0) ||
         enemyProgress(b) - enemyProgress(a),
     );
 
@@ -1632,7 +1743,7 @@ function fireTower(tower) {
   tower.cooldown = stats.fireRate;
   if (stats.auraSlow) {
     for (const enemy of targets) {
-      applyDamage(enemy, stats.damage);
+      applyDamage(enemy, stats.damage, tower);
       if (state.enemies.includes(enemy)) applySlow(enemy, stats.slowDuration || 1.4, tower.id, stats.coldPierce || 0);
       if (stats.cancelSpeedAuraDuration && state.enemies.includes(enemy)) {
         enemy.speedAuraSuppressedTime = Math.max(enemy.speedAuraSuppressedTime || 0, stats.cancelSpeedAuraDuration);
@@ -1648,9 +1759,9 @@ function fireTower(tower) {
       if (stats.vulnMult && state.enemies.includes(enemy)) {
         applyVulnerability(enemy, stats.vulnMult, stats.vulnDuration || 1.4);
       }
-      applyDamage(enemy, stats.damage);
+      applyDamage(enemy, stats.damage, tower);
       if (stats.burnDps && state.enemies.includes(enemy)) {
-        applyBurn(enemy, stats.burnDps, stats.burnDuration || 2);
+        applyBurn(enemy, stats.burnDps, stats.burnDuration || 2, tower);
       }
     }
     state.effects.push({ x: tower.x, y: tower.y, r: stats.range, life: 0.18, color: stats.color });
@@ -1669,9 +1780,9 @@ function fireTower(tower) {
       .sort((a, b) => enemyProgress(b) - enemyProgress(a));
     for (const enemy of shockTargets) {
       const distanceMod = 1 - clamp(dist(enemy, tower) / radius, 0, 0.55);
-      applyDamage(enemy, Math.max(1, Math.round(scaledTowerDamage(stats, enemy) * distanceMod)));
+      applyDamage(enemy, Math.max(1, Math.round(scaledTowerDamage(stats, enemy) * distanceMod)), tower);
       if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.12);
-      if (stats.burnDps && state.enemies.includes(enemy)) applyBurn(enemy, stats.burnDps, stats.burnDuration || 2);
+      if (stats.burnDps && state.enemies.includes(enemy)) applyBurn(enemy, stats.burnDps, stats.burnDuration || 2, tower);
     }
     state.effects.push({ x: tower.x, y: tower.y, r: radius, life: 0.2, color: stats.color });
     return;
@@ -1683,9 +1794,9 @@ function fireTower(tower) {
     if (!plan) return;
     const lineTargets = plan.hits.sort((a, b) => enemyProgress(b) - enemyProgress(a));
     for (const enemy of lineTargets) {
-      applyDamage(enemy, scaledTowerDamage(stats, enemy));
+      applyDamage(enemy, scaledTowerDamage(stats, enemy), tower);
       if (stats.bleedDps && state.enemies.includes(enemy)) {
-        applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3);
+        applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3, tower);
       }
     }
     state.effects.push({
@@ -1714,10 +1825,10 @@ function fireTower(tower) {
       const bladeStormDamage = stats.bladeStormMult
         ? Math.round(scaledTowerDamage(stats, enemy) * (1 + Math.min(4, bladeStormCount) * stats.bladeStormMult))
         : scaledTowerDamage(stats, enemy);
-      applyDamage(enemy, bladeStormDamage);
+      applyDamage(enemy, bladeStormDamage, tower);
       if (stats.stun && state.enemies.includes(enemy)) applyStun(enemy, stats.stunDuration || 0.25);
       if (stats.knockback && state.enemies.includes(enemy)) applyKnockback(enemy, stats.knockback);
-      if (stats.bleedDps && state.enemies.includes(enemy)) applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3);
+      if (stats.bleedDps && state.enemies.includes(enemy)) applyBleed(enemy, stats.bleedDps, stats.bleedDuration || 3, tower);
       if (stats.antiHealMult && state.enemies.includes(enemy)) applyAntiHeal(enemy, stats.antiHealMult, stats.antiHealDuration || 2);
       state.effects.push({ x: enemy.x, y: enemy.y, r: 18, life: 0.16, color: stats.color });
     }
@@ -1737,10 +1848,17 @@ function fireTower(tower) {
     state.projectiles.push({
       x: tower.x,
       y: tower.y,
+      startX: tower.x,
+      startY: tower.y,
       prevX: tower.x,
       prevY: tower.y,
       target: shotTarget,
+      sourceTower: tower,
+      towerType: tower.type,
       speed: stats.projectileSpeed,
+      travelDistance: Math.max(1, dist(tower, shotTarget)),
+      progress: 0,
+      arcHeight: ["mortar", "firepot", "crusher"].includes(tower.type) || stats.tileBurnDuration ? 34 : 0,
       damage: stats.damage,
       repeatStack,
       color: stats.color,
@@ -1773,10 +1891,24 @@ function fireTower(tower) {
   }
 }
 
-function applyDamage(enemy, amount) {
+function damageSourceTower(source) {
+  const tower = source?.sourceTower || source?.tower || source;
+  return state.towers.includes(tower) ? tower : null;
+}
+
+function creditTowerDamage(source, amount) {
+  const tower = damageSourceTower(source);
+  if (!tower || amount <= 0) return;
+  tower.waveDamage = (tower.waveDamage || 0) + amount;
+  tower.totalDamage = (tower.totalDamage || 0) + amount;
+}
+
+function applyDamage(enemy, amount, source = null) {
   if (amount <= 0) return;
   const damage = amount * (enemy.vulnTime > 0 ? enemy.vulnMult || 1 : 1);
+  const dealt = Math.max(0, Math.min(enemy.hp, damage));
   enemy.hp -= damage;
+  creditTowerDamage(source, dealt);
   state.effects.push({ x: enemy.x, y: enemy.y, r: 4, life: 0.25, color: "#ffffff" });
   if (enemy.hp <= 0) {
     spawnDeathChildren(enemy);
@@ -1894,12 +2026,14 @@ function applyStun(enemy, duration) {
   enemy.stunTime = Math.max(enemy.stunTime || 0, duration * bossMod);
 }
 
-function applyBurn(enemy, dps, duration) {
+function applyBurn(enemy, dps, duration, source = null) {
+  if (dps >= (enemy.burnDps || 0)) enemy.burnSource = source;
   enemy.burnDps = Math.max(enemy.burnDps || 0, dps);
   enemy.burnTime = Math.max(enemy.burnTime || 0, duration);
 }
 
-function applyBleed(enemy, dps, duration) {
+function applyBleed(enemy, dps, duration, source = null) {
+  if (dps >= (enemy.bleedDps || 0)) enemy.bleedSource = source;
   enemy.bleedDps = Math.max(enemy.bleedDps || 0, dps);
   enemy.bleedTime = Math.max(enemy.bleedTime || 0, duration);
 }
@@ -1978,7 +2112,7 @@ function resolveProjectileHit(projectile, target) {
       ? 1 - clamp(dist(enemy, impact) / projectile.splashRadius, 0, 0.62)
       : 1;
     const damage = scaledTowerDamage(projectile, enemy, projectile.repeatStack) * distanceMod;
-    applyDamage(enemy, Math.max(1, Math.round(damage)));
+    applyDamage(enemy, Math.max(1, Math.round(damage)), projectile);
     if (projectile.slow && state.enemies.includes(enemy)) {
       applySlow(enemy, projectile.slowDuration || 1.4, null, projectile.coldPierce || 0);
     }
@@ -1994,13 +2128,13 @@ function resolveProjectileHit(projectile, target) {
       state.enemies.includes(enemy) &&
       enemy.hp / enemy.maxHp <= projectile.executeAirThreshold
     ) {
-      applyDamage(enemy, enemy.hp + 1);
+      applyDamage(enemy, enemy.hp + 1, projectile);
     }
     if (projectile.burnDps && state.enemies.includes(enemy)) {
-      applyBurn(enemy, projectile.burnDps, projectile.burnDuration || 2);
+      applyBurn(enemy, projectile.burnDps, projectile.burnDuration || 2, projectile);
     }
     if (projectile.bleedDps && state.enemies.includes(enemy)) {
-      applyBleed(enemy, projectile.bleedDps, projectile.bleedDuration || 3);
+      applyBleed(enemy, projectile.bleedDps, projectile.bleedDuration || 3, projectile);
     }
   }
 
@@ -2027,7 +2161,7 @@ function resolveProjectileHit(projectile, target) {
       .sort((a, b) => dist(a, target) - dist(b, target))
       .slice(0, projectile.chainCount);
     for (const enemy of chained) {
-      applyDamage(enemy, Math.round(scaledTowerDamage(projectile, enemy) * 0.55));
+      applyDamage(enemy, Math.round(scaledTowerDamage(projectile, enemy) * 0.55), projectile);
       if (projectile.stun && state.enemies.includes(enemy)) {
         applyStun(enemy, (projectile.stunDuration || 0.2) * 0.65);
       }
@@ -2046,6 +2180,7 @@ function resolveProjectileHit(projectile, target) {
       duration: projectile.tileBurnDuration,
       life: projectile.tileBurnDuration,
       color: projectile.color,
+      sourceTower: projectile.sourceTower,
     });
   }
 }
@@ -2060,20 +2195,26 @@ function updateEnemies(dt) {
     }
 
     if (enemy.burnTime > 0) {
-      applyDamage(enemy, enemy.burnDps * dt);
+      applyDamage(enemy, enemy.burnDps * dt, enemy.burnSource);
       if (!state.enemies.includes(enemy)) continue;
       enemy.burnTime = Math.max(0, enemy.burnTime - dt);
-      if (enemy.burnTime <= 0) enemy.burnDps = 0;
+      if (enemy.burnTime <= 0) {
+        enemy.burnDps = 0;
+        enemy.burnSource = null;
+      }
     }
     if (enemy.bleedTime > 0) {
-      applyDamage(enemy, enemy.bleedDps * dt);
+      applyDamage(enemy, enemy.bleedDps * dt, enemy.bleedSource);
       if (!state.enemies.includes(enemy)) continue;
       enemy.bleedTime = Math.max(0, enemy.bleedTime - dt);
-      if (enemy.bleedTime <= 0) enemy.bleedDps = 0;
+      if (enemy.bleedTime <= 0) {
+        enemy.bleedDps = 0;
+        enemy.bleedSource = null;
+      }
     }
     for (const fireTile of state.fireTiles) {
       if (dist(enemy, fireTile) <= fireTile.r && !enemy.flying) {
-        applyBurn(enemy, fireTile.dps, 1.1);
+        applyBurn(enemy, fireTile.dps, 1.1, fireTile.sourceTower);
         break;
       }
     }
@@ -2141,6 +2282,7 @@ function updateProjectiles(dt) {
     const step = projectile.speed * dt;
 
     if (distance <= step) {
+      projectile.progress = 1;
       resolveProjectileHit(projectile, projectile.target);
       state.projectiles = state.projectiles.filter((item) => item !== projectile);
     } else {
@@ -2148,6 +2290,7 @@ function updateProjectiles(dt) {
       projectile.prevY = projectile.y;
       projectile.x += (dx / distance) * step;
       projectile.y += (dy / distance) * step;
+      projectile.progress = Math.min(1, (projectile.progress || 0) + step / (projectile.travelDistance || distance));
     }
   }
 }
@@ -2156,6 +2299,7 @@ function update(dt) {
   if (paused || ended) return;
 
   if (waveActive) {
+    state.waveTime += dt;
     spawnTimer -= dt;
     if (state.spawned < state.toSpawn && spawnTimer <= 0) {
       const nextType = state.waveQueue[state.spawned] || "skeleton";
@@ -2183,6 +2327,7 @@ function update(dt) {
   }
 
   for (const tower of state.towers) {
+    if (waveActive) tower.waveSeconds = (tower.waveSeconds || 0) + dt;
     tower.cooldown -= dt;
     if (tower.cooldown <= 0) fireTower(tower);
   }
@@ -2240,6 +2385,15 @@ function drawTerrain() {
   ctx.fillRect(0, H - 12, W, 12);
 }
 
+function drawSoftShadow(x, y, width, height, alpha = 0.28) {
+  ctx.save();
+  ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+  ctx.beginPath();
+  ctx.ellipse(x + 4, y + 5, width, height, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawGrid() {
   ctx.strokeStyle = "rgba(255,246,223,0.055)";
   ctx.lineWidth = 1;
@@ -2261,6 +2415,16 @@ function drawPath() {
   if (!currentPath.length) return;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(8,10,7,0.32)";
+  ctx.lineWidth = 34;
+  ctx.beginPath();
+  currentPath.forEach((point, i) => (i ? ctx.lineTo(point.x, point.y + 4) : ctx.moveTo(point.x, point.y + 4)));
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(35,24,14,0.62)";
+  ctx.lineWidth = 32;
+  ctx.beginPath();
+  currentPath.forEach((point, i) => (i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)));
+  ctx.stroke();
   ctx.strokeStyle = "rgba(62,43,27,0.55)";
   ctx.lineWidth = 28;
   ctx.beginPath();
@@ -2268,6 +2432,10 @@ function drawPath() {
   ctx.stroke();
   ctx.strokeStyle = "rgba(157,113,63,0.72)";
   ctx.lineWidth = 18;
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(213,166,92,0.18)";
+  ctx.lineWidth = 11;
+  ctx.setLineDash([4, 14]);
   ctx.stroke();
   ctx.strokeStyle = "rgba(255,246,223,0.26)";
   ctx.lineWidth = 2;
@@ -2291,58 +2459,78 @@ function drawShield(x, y, color) {
 
 const spritePatterns = {
   archer: [
-    "   c   ",
-    "  ccc  ",
-    "  hhh  ",
-    " bgbgb ",
-    "  ggg b",
-    "  y y  ",
-    " b   b ",
+    "     c     ",
+    "    ccc    ",
+    "   cchcc   ",
+    "    hhh    ",
+    "   bgbgb   ",
+    "  bbgggbb  ",
+    "    ggg b  ",
+    "   yy yy   ",
+    "  b y y b  ",
+    " b       b ",
+    "           ",
   ],
   guard: [
-    "  sss  ",
-    " swwws ",
-    " swbws ",
-    "  www  ",
-    "  bbb  ",
-    "  y y  ",
-    " s   s ",
+    "    sss    ",
+    "   swwws   ",
+    "  sswwwss  ",
+    "  swbwbws  ",
+    "   wwwww   ",
+    "  ssbbbss  ",
+    "   bbbbb   ",
+    "   y y y   ",
+    "  s y y s  ",
+    " s       s ",
+    "           ",
   ],
   ballista: [
-    " w   w ",
-    "  w w  ",
-    "ssscsss",
-    "  bbb  ",
-    " yyyyy ",
-    " b   b ",
-    "       ",
+    " w       w ",
+    "  w     w  ",
+    "   w c w   ",
+    "sssswssssss",
+    "  bbbbbb   ",
+    " yyyyyyyyy ",
+    "  bb   bb  ",
+    " b       b ",
+    "           ",
   ],
   sky: [
-    "   c   ",
-    "  cwc  ",
-    " cwwwc ",
-    "b  w  b",
-    "  yyy  ",
-    " b   b ",
-    "       ",
+    "     c     ",
+    "    cwc    ",
+    "   cwwwc   ",
+    "  cwwwwwc  ",
+    " b  www  b ",
+    "bb  yyy  bb",
+    "   yyyyy   ",
+    "  b y y b  ",
+    " b       b ",
+    "           ",
   ],
   mage: [
-    "   c   ",
-    "  ccc  ",
-    "  hhh  ",
-    " mmmmm ",
-    "  mmm  ",
-    "  y y  ",
-    " s   s ",
+    "     c     ",
+    "    ccc    ",
+    "   cchcc   ",
+    "    hhh    ",
+    "  mmmmmmm  ",
+    "  mmmsmmm  ",
+    "   mmmmm   ",
+    "    y y    ",
+    "   s   s   ",
+    "  s     s  ",
+    "           ",
   ],
   catapult: [
-    "   w   ",
-    "  www  ",
-    "   w   ",
-    " bbbbb ",
-    " yyyyy ",
-    " b   b ",
-    "       ",
+    "     w     ",
+    "    www    ",
+    "   wwwww   ",
+    "     w     ",
+    "  bbbbbbb  ",
+    " byyyyyyyb ",
+    "  yyyyyyy  ",
+    " bb     bb ",
+    " b       b ",
+    "           ",
   ],
   skeleton: [
     "  www  ",
@@ -2399,6 +2587,142 @@ function drawPixelSprite(pattern, x, y, scale, palette, flip = false) {
   }
 }
 
+function shadeColor(hex, amount) {
+  const color = hex.replace("#", "");
+  const value = Number.parseInt(color.length === 3 ? color.split("").map((char) => char + char).join("") : color, 16);
+  const r = clamp((value >> 16) + amount, 0, 255);
+  const g = clamp(((value >> 8) & 255) + amount, 0, 255);
+  const b = clamp((value & 255) + amount, 0, 255);
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawIsoPixelSprite(pattern, x, y, scale, palette, flip = false) {
+  const height = pattern.length;
+  const width = pattern[0].length;
+  const originX = x - (width * scale) / 2;
+  const originY = y - (height * scale) / 2;
+  const depthX = Math.max(1, Math.round(scale * 0.55));
+  const depthY = Math.max(1, Math.round(scale * 0.55));
+
+  ctx.save();
+  ctx.globalAlpha = 0.42;
+  ctx.fillStyle = "rgba(0,0,0,0.32)";
+  ctx.beginPath();
+  ctx.ellipse(x + 4, y + height * scale * 0.44, width * scale * 0.45, scale * 1.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  for (let row = height - 1; row >= 0; row -= 1) {
+    for (let col = width - 1; col >= 0; col -= 1) {
+      const sourceCol = flip ? width - 1 - col : col;
+      const key = pattern[row][sourceCol];
+      const color = palette[key];
+      if (!color) continue;
+      if (row < Math.floor(height * 0.48)) continue;
+      const px = Math.round(originX + col * scale);
+      const py = Math.round(originY + row * scale);
+      ctx.fillStyle = "rgba(0,0,0,0.34)";
+      ctx.fillRect(px + depthX, py + depthY, scale, scale);
+      if (row >= Math.floor(height * 0.42)) {
+        ctx.fillStyle = "rgba(0,0,0,0.22)";
+        ctx.fillRect(px + depthX, py + depthY + scale - 1, scale, Math.max(1, Math.round(scale * 0.55)));
+      }
+    }
+  }
+
+  for (let row = 0; row < height; row += 1) {
+    for (let col = 0; col < width; col += 1) {
+      const sourceCol = flip ? width - 1 - col : col;
+      const key = pattern[row][sourceCol];
+      const color = palette[key];
+      if (!color) continue;
+      const px = Math.round(originX + col * scale);
+      const py = Math.round(originY + row * scale - col * 0.14);
+      ctx.fillStyle = color;
+      ctx.fillRect(px, py, scale, scale);
+      if (row <= 2) {
+        ctx.fillStyle = shadeColor(color, 42);
+        ctx.fillRect(px, py, scale, Math.max(1, Math.round(scale * 0.35)));
+      }
+      if (col >= Math.floor(width * 0.58)) {
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.fillRect(px + scale - 1, py, 1, scale);
+      }
+    }
+  }
+}
+
+function drawTowerFootprint(tower, stats, active) {
+  ctx.save();
+  ctx.fillStyle = active ? "rgba(244,201,93,0.16)" : "rgba(0,0,0,0.18)";
+  ctx.strokeStyle = active ? "rgba(244,201,93,0.76)" : `${stats.color}66`;
+  ctx.lineWidth = active ? 3 : 2;
+  ctx.beginPath();
+  ctx.moveTo(tower.x, tower.y + 4);
+  ctx.lineTo(tower.x + 15, tower.y + 11);
+  ctx.lineTo(tower.x + 2, tower.y + 18);
+  ctx.lineTo(tower.x - 15, tower.y + 11);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function branchAccentColor(tower, stats) {
+  if (tower.finalForm) return "#fff6df";
+  if (tower.specialization === "a") return "#91ddec";
+  if (tower.specialization === "b") return "#ff8b3d";
+  if (tower.evolution === "a") return shadeColor(stats.color, 52);
+  if (tower.evolution === "b") return "#d9a441";
+  return stats.color;
+}
+
+function drawTowerUpgradeDetails(tower, stats) {
+  const accent = branchAccentColor(tower, stats);
+  const ringCount = tower.finalForm ? 4 : tower.specialization ? 3 : tower.evolution ? 2 : tower.level >= 4 ? 1 : 0;
+  if (!ringCount) return;
+  ctx.save();
+  for (let i = 0; i < ringCount; i += 1) {
+    const pulse = tower.finalForm && i === ringCount - 1 ? Math.sin(animTime * 5) * 0.08 : 0;
+    ctx.globalAlpha = 0.46 + i * 0.09 + pulse;
+    ctx.strokeStyle = i % 2 === 0 ? accent : "#fff6df";
+    ctx.lineWidth = tower.finalForm && i === ringCount - 1 ? 3 : 2;
+    ctx.beginPath();
+    ctx.ellipse(tower.x + 1, tower.y + 10, 12 + i * 3.5, 4.5 + i * 1.3, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTowerFinalFlair(tower, stats) {
+  if (!tower.finalForm) return;
+  const accent = branchAccentColor(tower, stats);
+  ctx.save();
+  ctx.globalAlpha = 0.18 + Math.sin(animTime * 4.5) * 0.04;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(tower.x + 1, tower.y - 6, 19, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#f4c95d";
+  ctx.strokeStyle = "#101216";
+  ctx.lineWidth = 1;
+  const crownY = tower.y - 27;
+  ctx.beginPath();
+  ctx.moveTo(tower.x - 8, crownY + 6);
+  ctx.lineTo(tower.x - 8, crownY);
+  ctx.lineTo(tower.x - 3, crownY + 4);
+  ctx.lineTo(tower.x + 1, crownY - 3);
+  ctx.lineTo(tower.x + 5, crownY + 4);
+  ctx.lineTo(tower.x + 10, crownY);
+  ctx.lineTo(tower.x + 10, crownY + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function defenderSprite(tower, stats) {
   if (tower.type === "dart" || tower.type === "spear") return "archer";
   if (tower.type === "guard" || tower.type === "grunt" || tower.type === "berserker") return "guard";
@@ -2441,57 +2765,57 @@ function drawTower(tower) {
   const stats = towerStats(tower);
   const active = selectedTower === tower;
   ctx.save();
-  const x = tower.col * cell;
-  const y = tower.row * cell;
-  ctx.fillStyle = stats.melee ? "#24334a" : "#21190f";
-  ctx.strokeStyle = active ? "#f4c95d" : stats.color;
-  ctx.lineWidth = active ? 4 : 3;
-  ctx.fillRect(x + 3, y + 3, cell - 6, cell - 6);
-  ctx.strokeRect(x + 3, y + 3, cell - 6, cell - 6);
-
-  if (active) {
-    ctx.fillStyle = "rgba(244,201,93,0.08)";
-    ctx.strokeStyle = "rgba(244,201,93,0.45)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(tower.x, tower.y, stats.range, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
+  drawSoftShadow(tower.x, tower.y + 17, 19, 7, active ? 0.42 : 0.3);
+  drawTowerFootprint(tower, stats, active);
 
   if (stats.bank) {
+    ctx.fillStyle = shadeColor(stats.color, -96);
+    ctx.beginPath();
+    ctx.moveTo(tower.x - 12, tower.y - 1);
+    ctx.lineTo(tower.x, tower.y - 9);
+    ctx.lineTo(tower.x + 13, tower.y - 2);
+    ctx.lineTo(tower.x + 13, tower.y + 13);
+    ctx.lineTo(tower.x - 12, tower.y + 13);
+    ctx.closePath();
+    ctx.fill();
     ctx.fillStyle = "#101216";
-    ctx.fillRect(tower.x - 12, tower.y - 11, 24, 24);
+    ctx.fillRect(tower.x - 9, tower.y - 2, 20, 17);
     ctx.strokeStyle = "#f0c14b";
     ctx.lineWidth = 2;
-    ctx.strokeRect(tower.x - 12, tower.y - 11, 24, 24);
+    ctx.strokeRect(tower.x - 9, tower.y - 2, 20, 17);
     ctx.fillStyle = "#f0c14b";
     ctx.font = "900 18px system-ui";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("$", tower.x, tower.y + 1);
   } else {
-  const bob = Math.sin(animTime * 3.2 + tower.col * 0.7 + tower.row * 0.4) * 1.2;
-  drawPixelSprite(spritePatterns[defenderSprite(tower, stats)], tower.x, tower.y - 2 + bob, 3, defenderPalette(stats, tower));
+    const bob = Math.sin(animTime * 3.2 + tower.col * 0.7 + tower.row * 0.4) * 1.2;
+    const spriteScale = tower.finalForm ? 2.9 : tower.specialization ? 2.9 : tower.evolution ? 2.65 : tower.level >= 4 ? 2.35 : 2;
+    drawIsoPixelSprite(spritePatterns[defenderSprite(tower, stats)], tower.x, tower.y - 9 + bob, spriteScale, defenderPalette(stats, tower));
+    if (tower.level >= 4 || tower.evolution) drawTowerUpgradeDetails(tower, stats);
+    drawTowerFinalFlair(tower, stats);
   }
 
-  ctx.fillStyle = "#fff6df";
-  ctx.font = "800 10px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(stats.glyph, tower.x, tower.y - 1);
-  if (tower.evolution) {
-    ctx.strokeStyle = "#f4c95d";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(tower.x, tower.y, 15, 0, Math.PI * 2);
-    ctx.stroke();
-  }
   ctx.fillStyle = "#101216";
   ctx.font = "700 11px system-ui";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(tower.level, tower.x + 11, tower.y + 11);
+  ctx.fillText(tower.level, tower.x + 12, tower.y + 13);
+  ctx.restore();
+}
+
+function drawSelectedRange() {
+  if (!selectedTower) return;
+  const stats = towerStats(selectedTower);
+  if (!stats.range) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(244,201,93,0.08)";
+  ctx.strokeStyle = "rgba(244,201,93,0.45)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(selectedTower.x, selectedTower.y, stats.range, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -2523,8 +2847,8 @@ function drawEnemyShape(enemy) {
   drawPixelSprite(spritePatterns.skeleton, enemy.x, enemy.y - 2 + bob, 3, enemyPalette(enemy));
 }
 
-function drawEnemies() {
-  for (const enemy of state.enemies) {
+function drawEnemies(enemies = state.enemies) {
+  for (const enemy of enemies) {
     if (enemy.healRadius || enemy.speedAuraRadius) {
       ctx.save();
       ctx.globalAlpha = 0.12;
@@ -2534,10 +2858,7 @@ function drawEnemies() {
       ctx.fill();
       ctx.restore();
     }
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.beginPath();
-    ctx.ellipse(enemy.x, enemy.y + enemy.radius + 7, enemy.radius * 0.95, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
+    drawSoftShadow(enemy.x, enemy.y + enemy.radius + 3, enemy.radius * 0.95, enemy.flying ? 6 : 4, enemy.flying ? 0.16 : 0.28);
     drawEnemyShape(enemy);
     ctx.fillStyle = "#17120d";
     ctx.font = "700 10px system-ui";
@@ -2554,20 +2875,45 @@ function drawEnemies() {
   }
 }
 
-function drawProjectiles() {
-  for (const projectile of state.projectiles) {
+function drawProjectile(projectile) {
+    const arcHeight = projectile.arcHeight || 0;
+    const height = arcHeight * Math.sin((projectile.progress || 0) * Math.PI);
+    const drawY = projectile.y - height;
+    const prevProgress = Math.max(0, (projectile.progress || 0) - 0.04);
+    const prevHeight = arcHeight * Math.sin(prevProgress * Math.PI);
+    const prevY = (projectile.prevY ?? projectile.y) - prevHeight;
+    if (arcHeight) drawSoftShadow(projectile.x, projectile.y + 4, 5, 2, 0.18);
     ctx.strokeStyle = projectile.color;
     ctx.globalAlpha = 0.58;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(projectile.prevX ?? projectile.x, projectile.prevY ?? projectile.y);
-    ctx.lineTo(projectile.x, projectile.y);
+    ctx.moveTo(projectile.prevX ?? projectile.x, prevY);
+    ctx.lineTo(projectile.x, drawY);
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.fillStyle = projectile.color;
     ctx.beginPath();
-    ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI * 2);
+    ctx.arc(projectile.x, drawY, arcHeight ? 5 : 4, 0, Math.PI * 2);
     ctx.fill();
+}
+
+function drawProjectiles() {
+  for (const projectile of state.projectiles) {
+    drawProjectile(projectile);
+  }
+}
+
+function drawWorldObjects() {
+  const objects = [
+    ...state.towers.map((tower) => ({ kind: "tower", y: tower.y + 11, item: tower })),
+    ...state.enemies.map((enemy) => ({ kind: "enemy", y: enemy.y + enemy.radius, item: enemy })),
+    ...state.projectiles.map((projectile) => ({ kind: "projectile", y: projectile.y, item: projectile })),
+  ].sort((a, b) => a.y - b.y);
+
+  for (const object of objects) {
+    if (object.kind === "tower") drawTower(object.item);
+    if (object.kind === "enemy") drawEnemies([object.item]);
+    if (object.kind === "projectile") drawProjectile(object.item);
   }
 }
 
@@ -2653,9 +2999,8 @@ function render() {
   drawPath();
   drawGates();
   drawPlacementPreview();
-  state.towers.forEach(drawTower);
-  drawEnemies();
-  drawProjectiles();
+  drawSelectedRange();
+  drawWorldObjects();
   drawEffects();
 }
 
@@ -2798,11 +3143,16 @@ function tryFinalFormSelected() {
 function sellSelected() {
   if (!selectedTower) return;
   const storedGold = towerTypes[selectedTower.type]?.bank ? selectedTower.storedGold || 0 : 0;
+  const goldGlitched = recordTestGoldGlitchSell(selectedTower);
   state.credits += sellValue(selectedTower) + storedGold;
   state.towers = state.towers.filter((tower) => tower !== selectedTower);
   selectedTower = null;
   refreshPath();
-  ui.banner.textContent = storedGold ? `Bank sold. Collected ${storedGold}g.` : "Defender sold.";
+  ui.banner.textContent = goldGlitched
+    ? "Test gold glitch triggered. Spend wildly."
+    : storedGold
+      ? `Bank sold. Collected ${storedGold}g.`
+      : "Defender sold.";
   updateHud();
 }
 
@@ -2921,6 +3271,9 @@ canvas.addEventListener("click", (event) => {
   placeOrSelect(tileFromEvent(event));
 });
 
+window.addEventListener("resize", setupCanvasDpi);
+
+setupCanvasDpi();
 renderTowerDock();
 resetGame();
 requestAnimationFrame(loop);
